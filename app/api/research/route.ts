@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { hostedAiConfig } from "@/lib/ai/env";
 import { researchClaim } from "@/lib/ai/research-claim";
+import { verifyEvidenceWithEscalation } from "@/lib/ai/verify-evidence";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as {
@@ -15,6 +16,7 @@ export async function POST(request: Request) {
   if (!body.claimId) {
     return NextResponse.json({ error: "claimId required" }, { status: 400 });
   }
+  const config = hostedAiConfig();
   const researched = await researchClaim({
     company: body.company ?? "Unknown company",
     role: body.role ?? "Open role",
@@ -29,15 +31,26 @@ export async function POST(request: Request) {
   if (!chosen) {
     return NextResponse.json({ error: "no evidence" }, { status: 422 });
   }
+  const escalated =
+    chosen.verificationStatus === "INSUFFICIENT"
+      ? await verifyEvidenceWithEscalation({
+          employerStatement: body.employerStatement ?? "",
+          evidenceText: chosen.text,
+          sourceUrl: chosen.sourceUrl,
+          escalate: true,
+          escalationModel: config.escalationModel,
+        })
+      : { ...chosen, escalated: false, model: config.verifierModel };
   return NextResponse.json({
     claimId: body.claimId,
-    stance: chosen.stance,
+    stance: escalated.stance,
     text: chosen.text,
     sourceKind: chosen.sourceKind,
     sourceLabel: chosen.sourceLabel,
     sourceUrl: chosen.sourceUrl,
-    verificationStatus: chosen.verificationStatus,
+    verificationStatus: escalated.verificationStatus,
     counterevidenceAttempted: researched.counterevidenceAttempted,
-    model: hostedAiConfig().extractorModel,
+    model: escalated.model,
+    escalated: escalated.escalated,
   });
 }

@@ -1,7 +1,11 @@
 import { verifyEvidence } from "@/lib/ai/verify-evidence";
 import { clusterEvidence, scoreEvidenceRelevance } from "@/lib/domain/evidence-relevance";
-import { chatJson } from "@/lib/ai/client";
-import { hostedAiConfig } from "@/lib/ai/env";
+import {
+  isSameSource,
+  publicSearchQuery,
+  searchPublicWeb,
+  type WebSearchHit,
+} from "@/lib/ai/web-search";
 import type { EvidenceStance, EvidenceVerificationStatus, ResearchSourceKind } from "@/lib/domain/types";
 
 export type ResearchCandidate = {
@@ -32,12 +36,6 @@ export type ResearchClaimResult = {
   readonly counterevidenceAttempted: boolean;
 };
 
-function officialUrl(input: ResearchClaimInput): string {
-  if (input.companyWebsite) return input.companyWebsite;
-  if (input.jobPostingUrl) return input.jobPostingUrl;
-  return "https://www.wanted.co.kr/";
-}
-
 async function fetchSourceText(url: string): Promise<string> {
   try {
     const controller = new AbortController();
@@ -61,96 +59,119 @@ async function fetchSourceText(url: string): Promise<string> {
   }
 }
 
+function sourceKindFor(url: string, companyWebsite?: string): ResearchSourceKind {
+  if (!companyWebsite) return "FIRST_PERSON_EXPERIENCE";
+  try {
+    const hitHost = new URL(url).hostname.replace(/^www\./, "");
+    const companyHost = new URL(companyWebsite).hostname.replace(/^www\./, "");
+    return hitHost === companyHost ? "EMPLOYER_OFFICIAL" : "FIRST_PERSON_EXPERIENCE";
+  } catch {
+    return "FIRST_PERSON_EXPERIENCE";
+  }
+}
+
+async function candidatesFromHits(
+  input: ResearchClaimInput,
+  hits: readonly WebSearchHit[],
+): Promise<ResearchCandidate[]> {
+  const posting = input.jobPostingUrl;
+  const unique = hits.filter((hit) => !posting || !isSameSource(hit.url, posting));
+  const researched = await Promise.all(
+    unique.slice(0, 4).map(async (hit, index) => {
+      const text = (await fetchSourceText(hit.url)) || hit.title;
+      const verdict = verifyEvidence({
+        employerStatement: input.employerStatement,
+        evidenceText: text,
+        sourceUrl: hit.url,
+      });
+      return {
+        id: `hit-${index}`,
+        sourceUrl: hit.url,
+        sourceLabel: hit.title || hit.url,
+        sourceKind: sourceKindFor(hit.url, input.companyWebsite),
+        text,
+        stance: verdict.stance,
+        verificationStatus: verdict.verificationStatus,
+        ...scoreEvidenceRelevance({
+          role: input.role,
+          location: "Seoul",
+          evidenceText: text,
+          sourceUrl: hit.url,
+        }),
+      };
+    }),
+  );
+  return clusterEvidence(researched) as ResearchCandidate[];
+}
+
 export async function researchClaim(
   input: ResearchClaimInput,
 ): Promise<ResearchClaimResult> {
-  const official = officialUrl(input);
-  const fetched = await fetchSourceText(official);
-  const supportingText = fetched || `${input.company} careers materials restated: ${input.employerStatement}`;
-  const counterText = `No independent public source confirmed ${input.unresolvedVariable}`;
-  const config = hostedAiConfig();
-  if (config.enabled) {
-    const proposed = await chatJson<{
-      supportingText?: string;
-      counterText?: string;
-      officialUrl?: string;
-    }>({
-      model: config.researchModel,
-      system:
-        "Return JSON {supportingText, counterText, officialUrl} for one claim. supportingText must quote or closely restate the employer statement. counterText must be a reasonable counterevidence check. officialUrl must be http(s).",
-      user: JSON.stringify(input),
-    });
-    if (proposed?.supportingText) {
-      return {
-        counterevidenceAttempted: true,
-        candidates: [
-          {
-            sourceUrl: proposed.officialUrl || official,
-            sourceLabel: "Company careers / official site",
-            sourceKind: "EMPLOYER_OFFICIAL",
-            text: proposed.supportingText,
-            ...verifyEvidence({
-              employerStatement: input.employerStatement,
-              evidenceText: proposed.supportingText,
-              sourceUrl: proposed.officialUrl || official,
-            }),
-          },
-          {
-            sourceUrl: official,
-            sourceLabel: "Public web counterevidence check",
-            sourceKind: "FIRST_PERSON_EXPERIENCE",
-            text: proposed.counterText || counterText,
-            ...verifyEvidence({
-              employerStatement: input.employerStatement,
-              evidenceText: proposed.counterText || counterText,
-              sourceUrl: official,
-            }),
-          },
-        ],
-      };
+  const supportHits = await searchPublicWeb(
+    publicSearchQuery({
+      company: input.company,
+      role: input.role,
+      unresolvedVariable: input.unresolvedVariable,
+    }),
+  );
+  const counterHits = await searchPublicWeb(
+    publicSearchQuery({
+      company: input.company,
+      role: input.role,
+      unresolvedVariable: input.unresolvedVariable,
+      counter: true,
+    }),
+  );
+  const merged = [...supportHits, ...counterHits].filter(
+    (hit, index, all) => all.findIndex((item) => item.url === hit.url) === index,
+  );
+  let candidates = await candidatesFromHits(input, merged);
+  if (candidates.length === 0 && input.jobPostingUrl) {
+    const officialText = await fetchSourceText(input.jobPostingUrl);
+    if (officialText) {
+      const verdict = verifyEvidence({
+        employerStatement: input.employerStatement,
+        evidenceText: officialText,
+        sourceUrl: input.jobPostingUrl,
+      });
+      candidates = clusterEvidence([
+        {
+          id: "official",
+          sourceUrl: input.jobPostingUrl,
+          sourceLabel: "Job posting",
+          sourceKind: "EMPLOYER_OFFICIAL" as const,
+          text: officialText,
+          stance: verdict.stance,
+          verificationStatus: verdict.verificationStatus,
+          ...scoreEvidenceRelevance({
+            role: input.role,
+            location: "Seoul",
+            evidenceText: officialText,
+            sourceUrl: input.jobPostingUrl,
+          }),
+        },
+      ]) as ResearchCandidate[];
     }
   }
-  const support = verifyEvidence({
-    employerStatement: input.employerStatement,
-    evidenceText: supportingText,
-    sourceUrl: official,
-  });
-  const counter = verifyEvidence({
-    employerStatement: input.employerStatement,
-    evidenceText: counterText,
-    sourceUrl: official,
-  });
+  if (candidates.length > 0) {
+    return { candidates, counterevidenceAttempted: true };
+  }
   return {
     counterevidenceAttempted: true,
     candidates: clusterEvidence([
       {
-        id: "official",
-        sourceUrl: official,
-        sourceLabel: "Company careers / official site",
-        sourceKind: "EMPLOYER_OFFICIAL" as const,
-        text: supportingText,
-        stance: support.stance,
-        verificationStatus: support.verificationStatus,
-        ...scoreEvidenceRelevance({
-          role: input.role,
-          location: "Seoul",
-          evidenceText: supportingText,
-          sourceUrl: official,
-        }),
-      },
-      {
-        id: "counter",
-        sourceUrl: official,
-        sourceLabel: "Public web counterevidence check",
+        id: "insufficient",
+        sourceUrl: input.jobPostingUrl || "https://html.duckduckgo.com/html/",
+        sourceLabel: "Public web search",
         sourceKind: "FIRST_PERSON_EXPERIENCE" as const,
-        text: counterText,
-        stance: counter.stance,
-        verificationStatus: counter.verificationStatus,
+        text: `No independent public source confirmed ${input.unresolvedVariable}`,
+        stance: "NEUTRAL" as const,
+        verificationStatus: "INSUFFICIENT" as const,
         ...scoreEvidenceRelevance({
           role: input.role,
           location: "Seoul",
-          evidenceText: counterText,
-          sourceUrl: official,
+          evidenceText: input.unresolvedVariable,
+          sourceUrl: input.jobPostingUrl || "https://html.duckduckgo.com/html/",
         }),
       },
     ]) as ResearchCandidate[],
