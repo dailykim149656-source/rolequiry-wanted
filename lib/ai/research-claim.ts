@@ -141,17 +141,27 @@ export function researchQueriesFromModel(
   };
 }
 
-export function chatgptDeepDivePrompt(caseUrl: string, nextQuestion?: string): string {
-  const question = nextQuestion?.trim();
-  const lines = [
-    'Open this Rolequiry case and keep working in the same page: ' + caseUrl,
-    'Use the page tools. Do not scrape the DOM.',
-    'Call select_decision_changer, then search the public web only for that active item.',
-    'Look for supporting evidence and counterevidence. Record only http(s) sources with record_research_evidence.',
-    'If a source does not settle the claim, say so. Do not invent a fit score.',
-  ];
-  if (question) lines.push('Start from this question: ' + question);
-  return lines.join(' ');
+export function chatgptDeepDivePrompt(input: {
+  readonly caseUrl: string;
+  readonly company: string;
+  readonly role: string;
+  readonly employerStatement: string;
+  readonly unresolvedVariable: string;
+  readonly question?: string;
+}): string {
+  const question = input.question?.trim() || input.unresolvedVariable;
+  return [
+    'This is a Rolequiry job-fit check, not a company score.',
+    'Company: ' + input.company + '.',
+    'Role: ' + input.role + '.',
+    'Employer claim: "' + input.employerStatement + '"',
+    'What is still unknown: ' + input.unresolvedVariable + '.',
+    'Check this: ' + question + '.',
+    'Search the public web for supporting evidence and counterevidence for this one claim only.',
+    'Return 1-3 http(s) sources with a short quote and whether each source SUPPORTS, CHALLENGES, or is INSUFFICIENT.',
+    'If the sources do not settle it, say INSUFFICIENT. Do not invent a fit score.',
+    'Case page, for context only: ' + input.caseUrl,
+  ].join(' ');
 }
 
 export function chatgptDeepDiveHref(prompt: string): string {

@@ -229,15 +229,21 @@ describe("research query quality", () => {
 });
 
 describe("chatgptDeepDivePrompt", () => {
-  it("points ChatGPT at the live case URL and the page tools", () => {
-    const prompt = chatgptDeepDivePrompt(
-      "http://127.0.0.1:3017/case?sample=atlas-fde",
-      "How concentrated is travel?",
-    );
-    expect(prompt).toContain("http://127.0.0.1:3017/case?sample=atlas-fde");
-    expect(prompt).toContain("select_decision_changer");
-    expect(prompt).toContain("record_research_evidence");
+  it("asks ChatGPT to research the active item without requiring page tools", () => {
+    const prompt = chatgptDeepDivePrompt({
+      caseUrl: "http://127.0.0.1:3017/case?sample=atlas-fde",
+      company: "Atlas",
+      role: "Forward Deployed Engineer",
+      employerStatement: "50% travel is expected.",
+      unresolvedVariable: "How concentrated is travel?",
+      question: "Median and maximum travel days in the last two quarters",
+    });
+    expect(prompt).toContain("Atlas");
+    expect(prompt).toContain("50% travel is expected.");
+    expect(prompt).toContain("How concentrated is travel?");
+    expect(prompt).not.toContain("select_decision_changer");
+    expect(prompt).not.toContain("record_research_evidence");
     expect(chatgptDeepDiveHref(prompt)).toContain("https://chatgpt.com/?q=");
-    expect(chatgptDeepDiveHref(prompt)).toContain("select_decision_changer");
+    expect(chatgptDeepDiveHref(prompt)).toContain("50%25%20travel");
   });
 });

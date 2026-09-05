@@ -270,7 +270,21 @@ export function CaseApp() {
   const openDeepDive = async () => {
     const current = store.getState();
     const claim = current.derived.claims.find((item) => item.id === current.activeProbeId);
-    const prompt = chatgptDeepDivePrompt(window.location.href, claim?.measurableForm);
+    if (!claim) {
+      setCaseFileStatus({
+        error: true,
+        message: "먼저 중요도를 고르면 다음에 볼 항목이 정해집니다.",
+      });
+      return;
+    }
+    const prompt = chatgptDeepDivePrompt({
+      caseUrl: window.location.href,
+      company: current.source.company,
+      role: current.source.role,
+      employerStatement: claim.employerStatement,
+      unresolvedVariable: claim.unresolvedVariable,
+      question: claim.measurableForm,
+    });
     const href = chatgptDeepDiveHref(prompt);
     try {
       await navigator.clipboard.writeText(prompt);
