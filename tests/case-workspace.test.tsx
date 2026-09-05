@@ -155,7 +155,7 @@ describe("case workspace status", () => {
       target: { files: [file] },
     });
     expect(onImport).toHaveBeenCalledWith(file);
-    expect(screen.getByText("Case imported from local JSON.")).toBeTruthy();
+    expect(screen.getAllByText("Case imported from local JSON.").length).toBeGreaterThan(0);
     expect(screen.getByText(/never uploaded/i)).toBeTruthy();
   });
 

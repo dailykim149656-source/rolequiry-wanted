@@ -32,6 +32,7 @@ type CaseWorkspaceProps = {
   readonly onShare?: () => void;
   readonly onFeedback?: () => void;
   readonly onDeepDive?: () => void;
+  readonly investigating?: boolean;
 };
 
 export function CaseWorkspace({
@@ -51,6 +52,7 @@ export function CaseWorkspace({
   onShare,
   onFeedback,
   onDeepDive,
+  investigating = false,
 }: CaseWorkspaceProps) {
   const { copy } = useLocale();
   return (
@@ -66,6 +68,9 @@ export function CaseWorkspace({
             {...(onShare ? { onShare } : {})}
             {...(onFeedback ? { onFeedback } : {})}
             {...(onDeepDive ? { onDeepDive } : {})}
+            investigating={investigating}
+            statusError={caseFileError}
+            statusMessage={caseFileMessage}
           />
           <div className="lg:col-start-1 lg:row-start-1">
             <ClaimBoard

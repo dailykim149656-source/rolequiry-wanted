@@ -8,7 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { CaseWorkspace } from "@/components/CaseWorkspace";
-import { chatgptDeepDivePrompt } from "@/lib/ai/research-claim";
+import { chatgptDeepDiveHref, chatgptDeepDivePrompt } from "@/lib/ai/research-claim";
 import {
   CASE_STORAGE_KEY,
   createCaseExport,
@@ -35,6 +35,7 @@ export function CaseApp() {
     readonly error: boolean;
     readonly message: string;
   } | null>(null);
+  const [investigating, setInvestigating] = useState(false);
   const webmcp = useCaseWebMCPTools(store);
   const snapshot = useSyncExternalStore(
     store.subscribe,
@@ -190,31 +191,70 @@ export function CaseApp() {
     const claim = next.derived.claims.find(
       (item) => item.id === next.activeProbeId,
     );
-    if (!claim) return;
-    const response = await fetch("/api/research", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        claimId: claim.id,
-        employerStatement: claim.employerStatement,
-        unresolvedVariable: claim.unresolvedVariable,
-        company: next.source.company,
-        role: next.source.role,
-        jobPostingUrl: next.source.jobPostingUrl ?? next.source.sourceUrl,
-        companyWebsite: next.source.companyWebsite,
-      }),
-    });
-    if (!response.ok) return;
-    const payload = (await response.json()) as {
-      claimId: string;
-      stance: "SUPPORTS" | "CHALLENGES" | "NEUTRAL";
-      text: string;
-      sourceKind: "EMPLOYER_OFFICIAL" | "FIRST_PERSON_EXPERIENCE";
-      sourceLabel: string;
-      sourceUrl: string;
-      verificationStatus: "VERIFIED" | "INSUFFICIENT" | "REJECTED";
-    };
-    store.recordVerifiedResearch(payload);
+    if (!claim) {
+      setCaseFileStatus({
+        error: true,
+        message: "먼저 중요도를 고르면 다음에 볼 항목이 정해집니다.",
+      });
+      return;
+    }
+    setInvestigating(true);
+    setCaseFileStatus({ error: false, message: "이 항목을 공개된 정보에서 찾는 중." });
+    try {
+      const response = await fetch("/api/research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          claimId: claim.id,
+          employerStatement: claim.employerStatement,
+          unresolvedVariable: claim.unresolvedVariable,
+          company: next.source.company,
+          role: next.source.role,
+          jobPostingUrl: next.source.jobPostingUrl ?? next.source.sourceUrl,
+          companyWebsite: next.source.companyWebsite,
+        }),
+      });
+      const payload = (await response.json()) as {
+        error?: string;
+        claimId?: string;
+        stance?: "SUPPORTS" | "CHALLENGES" | "NEUTRAL";
+        text?: string;
+        sourceKind?: "EMPLOYER_OFFICIAL" | "FIRST_PERSON_EXPERIENCE";
+        sourceLabel?: string;
+        sourceUrl?: string;
+        verificationStatus?: "VERIFIED" | "INSUFFICIENT" | "REJECTED";
+      };
+      if (!response.ok || !payload.claimId || !payload.sourceUrl || !payload.text || !payload.sourceKind || !payload.sourceLabel || !payload.stance || !payload.verificationStatus) {
+        setCaseFileStatus({
+          error: true,
+          message: payload.error ?? "이 항목을 찾지 못했습니다. ChatGPT로 더 깊게 보기를 눌러 보세요.",
+        });
+        return;
+      }
+      store.recordVerifiedResearch({
+        claimId: payload.claimId,
+        stance: payload.stance,
+        text: payload.text,
+        sourceKind: payload.sourceKind,
+        sourceLabel: payload.sourceLabel,
+        sourceUrl: payload.sourceUrl,
+        verificationStatus: payload.verificationStatus,
+      });
+      setCaseFileStatus({
+        error: false,
+        message:
+          payload.verificationStatus === "INSUFFICIENT"
+            ? "공개된 정보만으로는 아직 모릅니다. 근거는 남겨 뒀습니다."
+            : "찾은 근거를 이 항목에 붙였습니다.",
+      });
+    } catch {
+      setCaseFileStatus({
+        error: true,
+        message: "이 항목을 찾지 못했습니다. ChatGPT로 더 깊게 보기를 눌러 보세요.",
+      });
+    } finally {
+      setInvestigating(false);
+    }
   };
 
   const shareCase = async () => {
@@ -231,13 +271,19 @@ export function CaseApp() {
     const current = store.getState();
     const claim = current.derived.claims.find((item) => item.id === current.activeProbeId);
     const prompt = chatgptDeepDivePrompt(window.location.href, claim?.measurableForm);
+    const href = chatgptDeepDiveHref(prompt);
     try {
       await navigator.clipboard.writeText(prompt);
-      window.open("https://chatgpt.com/", "_blank", "noopener,noreferrer");
-      setCaseFileStatus({ error: false, message: "ChatGPT에 붙여넣을 안내를 복사했습니다." });
     } catch {
-      setCaseFileStatus({ error: true, message: "안내를 복사하지 못했습니다." });
+      // Opening ChatGPT with the prompt in the URL is enough if clipboard is blocked.
     }
+    const opened = window.open(href, "_blank", "noopener,noreferrer");
+    setCaseFileStatus({
+      error: !opened,
+      message: opened
+        ? "ChatGPT에 이 케이스 안내를 넣어 열었습니다. 붙여넣기는 복사해 뒀습니다."
+        : "팝업이 막혔습니다. 복사된 안내를 ChatGPT에 붙여넣으세요.",
+    });
   };
 
   const leaveFeedback = async () => {
@@ -277,6 +323,7 @@ export function CaseApp() {
       onShare={shareCase}
       onFeedback={leaveFeedback}
       onDeepDive={openDeepDive}
+      investigating={investigating}
       snapshot={snapshot}
       webmcpCount={webmcpCount}
       webmcpDiagnostics={webmcpDiagnostics}

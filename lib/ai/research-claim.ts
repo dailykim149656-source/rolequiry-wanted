@@ -154,6 +154,10 @@ export function chatgptDeepDivePrompt(caseUrl: string, nextQuestion?: string): s
   return lines.join(' ');
 }
 
+export function chatgptDeepDiveHref(prompt: string): string {
+  return "https://chatgpt.com/?q=" + encodeURIComponent(prompt);
+}
+
 async function hostedResearchQueries(input: ResearchClaimInput): Promise<ResearchQueries> {
   const config = hostedAiConfig();
   if (!config.enabled) return researchQueriesFromModel(input);

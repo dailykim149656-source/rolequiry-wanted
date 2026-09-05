@@ -21,6 +21,9 @@ export function DecisionPanel({
   onShare,
   onFeedback,
   onDeepDive,
+  investigating = false,
+  statusMessage = null,
+  statusError = false,
 }: {
   readonly snapshot: CaseSnapshot;
   readonly className?: string;
@@ -28,6 +31,9 @@ export function DecisionPanel({
   readonly onShare?: () => void;
   readonly onFeedback?: () => void;
   readonly onDeepDive?: () => void;
+  readonly investigating?: boolean;
+  readonly statusMessage?: string | null;
+  readonly statusError?: boolean;
 }) {
   const selected = snapshot.derived.claims.find(
     (claim) => claim.id === snapshot.activeProbeId,
@@ -58,12 +64,16 @@ export function DecisionPanel({
       </div>
       {onInvestigate ? (
         <button
-          className="mt-4 h-12 w-full rounded-full bg-[#3366ff] text-base font-extrabold text-white"
+          className="mt-4 h-12 w-full rounded-full bg-[#3366ff] text-base font-extrabold text-white disabled:opacity-60"
+          disabled={investigating}
           onClick={onInvestigate}
           type="button"
         >
-          {copy.investigate}
+          {investigating ? copy.investigating : copy.investigate}
         </button>
+      ) : null}
+      {statusMessage ? (
+        <p className={`mt-2 text-sm ${statusError ? "text-[#c23c4c]" : "text-[#666]"}`}>{statusMessage}</p>
       ) : null}
       {question ? (
         <button

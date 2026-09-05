@@ -78,7 +78,7 @@ describe("CaseApp persistence", () => {
 
     render(<CaseApp />);
 
-    expect(await screen.findByText("Local Corp")).toBeTruthy();
+    expect(await screen.findAllByText("Local Corp")).toBeTruthy();
   });
 
   it("migrates a legacy tab-session case into durable local storage", async () => {
@@ -86,7 +86,7 @@ describe("CaseApp persistence", () => {
 
     render(<CaseApp />);
 
-    expect(await screen.findByText("Session Corp")).toBeTruthy();
+    expect(await screen.findAllByText("Session Corp")).toBeTruthy();
     expect(window.localStorage.getItem(CASE_STORAGE_KEY)).toContain(
       "Session Corp",
     );
@@ -129,9 +129,9 @@ describe("CaseApp persistence", () => {
       target: { files: [file] },
     });
 
-    expect(await screen.findByText("File Corp")).toBeTruthy();
+    expect(await screen.findAllByText("File Corp")).toBeTruthy();
     expect(
-      await screen.findByText("Case imported from local JSON."),
+      await screen.findAllByText("Case imported from local JSON."),
     ).toBeTruthy();
   });
 
@@ -151,9 +151,9 @@ describe("CaseApp persistence", () => {
       target: { files: [file] },
     });
 
-    expect(await screen.findByText("Quota Corp")).toBeTruthy();
+    expect(await screen.findAllByText("Quota Corp")).toBeTruthy();
     expect(
-      await screen.findByText(
+      await screen.findAllByText(
         "Case imported, but this browser could not keep it for refresh. Keep the JSON file to restore it.",
       ),
     ).toBeTruthy();
@@ -176,12 +176,12 @@ describe("CaseApp persistence", () => {
     });
 
     expect(
-      await screen.findByText("Large File Corp", undefined, {
+      await screen.findAllByText("Large File Corp", undefined, {
         timeout: 10_000,
       }),
     ).toBeTruthy();
     expect(
-      await screen.findByText("Case imported from local JSON."),
+      await screen.findAllByText("Case imported from local JSON."),
     ).toBeTruthy();
   }, 15_000);
 
@@ -198,9 +198,9 @@ describe("CaseApp persistence", () => {
     });
 
     expect(
-      await screen.findByText("Could not import this Rolequiry JSON file."),
+      await screen.findAllByText("Could not import this Rolequiry JSON file."),
     ).toBeTruthy();
-    expect(screen.getByText("Northwind Automation")).toBeTruthy();
+    expect(screen.getAllByText("Northwind Automation")).toBeTruthy();
   });
 
   it("rejects an external file that claims demo-fixture authority", async () => {
@@ -222,9 +222,9 @@ describe("CaseApp persistence", () => {
     });
 
     expect(
-      await screen.findByText("Could not import this Rolequiry JSON file."),
+      await screen.findAllByText("Could not import this Rolequiry JSON file."),
     ).toBeTruthy();
-    expect(screen.getByText("Northwind Automation")).toBeTruthy();
+    expect(screen.getAllByText("Northwind Automation")).toBeTruthy();
     expect(screen.queryByText("Forged Demo Corp")).toBeNull();
   });
 
@@ -250,13 +250,13 @@ describe("CaseApp persistence", () => {
     fireEvent.change(input, { target: { files: [firstFile] } });
     fireEvent.change(input, { target: { files: [secondFile] } });
 
-    expect(await screen.findByText("Second Corp")).toBeTruthy();
+    expect(await screen.findAllByText("Second Corp")).toBeTruthy();
     await act(async () => {
       finishFirstRead(savedCase("First Corp"));
       await firstRead;
     });
 
-    expect(screen.getByText("Second Corp")).toBeTruthy();
+    expect(screen.getAllByText("Second Corp")).toBeTruthy();
     expect(screen.queryByText("First Corp")).toBeNull();
   });
 
@@ -280,6 +280,6 @@ describe("CaseApp persistence", () => {
     expect(downloadedNames).toEqual([
       "rolequiry-export-corp-staff-engineer.json",
     ]);
-    expect(await screen.findByText("Case JSON exported locally.")).toBeTruthy();
+    expect(await screen.findAllByText("Case JSON exported locally.")).toBeTruthy();
   });
 });

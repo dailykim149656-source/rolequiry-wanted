@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { researchClaim } from "@/lib/ai/research-claim";
 import { parseDuckDuckGoHits, isLowQualityHit } from "@/lib/ai/web-search";
-import { chatgptDeepDivePrompt, researchQueriesFromModel } from "@/lib/ai/research-claim";
+import { chatgptDeepDiveHref, chatgptDeepDivePrompt, researchQueriesFromModel } from "@/lib/ai/research-claim";
 import { verifyEvidence } from "@/lib/ai/verify-evidence";
 
 describe("researchClaim", () => {
@@ -237,5 +237,7 @@ describe("chatgptDeepDivePrompt", () => {
     expect(prompt).toContain("http://127.0.0.1:3017/case?sample=atlas-fde");
     expect(prompt).toContain("select_decision_changer");
     expect(prompt).toContain("record_research_evidence");
+    expect(chatgptDeepDiveHref(prompt)).toContain("https://chatgpt.com/?q=");
+    expect(chatgptDeepDiveHref(prompt)).toContain("select_decision_changer");
   });
 });
