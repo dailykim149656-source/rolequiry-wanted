@@ -73,14 +73,54 @@ const FALLBACK_DIMENSIONS = [
   },
 ] as const;
 
+function genericDimension(text: string): { dimension: string; unresolvedVariable: string; measurableForm: string } {
+  if (/경력|년 이상|경험/.test(text)) {
+    return {
+      dimension: "경력",
+      unresolvedVariable: "이 경력 요건은 실제로 얼마나 엄격한가?",
+      measurableForm: "필수 연차와 예외 여부",
+    };
+  }
+  if (/영어|글로벌|해외|수출/.test(text)) {
+    return {
+      dimension: "글로벌 업무",
+      unresolvedVariable: "해외 업무가 일과의 얼마나를 차지하나?",
+      measurableForm: "영어 사용 빈도와 해외 대응 범위",
+    };
+  }
+  if (/기획|전략|콘셉트|제품/.test(text)) {
+    return {
+      dimension: "역할 범위",
+      unresolvedVariable: "이 역할이 실제로 어디까지 맡나?",
+      measurableForm: "최근 분기 담당 업무와 의사결정 범위",
+    };
+  }
+  return {
+    dimension: "근무 조건",
+    unresolvedVariable: "이 조건은 공고와 실제가 같나?",
+    measurableForm: "최근 사례나 내부 기준으로 확인할 점",
+  };
+}
+
+function isRequirementLine(text: string): boolean {
+  return /^(•|-|\*)\s+/.test(text) || /경력|가능하신 분|경험자|보유하신 분|우대/.test(text);
+}
+
 function fallbackClaims(sourceText: string): ImportedClaimInput[] {
   const claims: ImportedClaimInput[] = [];
   for (const line of sourceText.split(/\n+/)) {
     const statement = line.trim().replace(/\.$/, ".");
     const cleaned = statement.replace(/^[•\-\s]+/, "");
     if (cleaned.length < 12) continue;
-    const dim = FALLBACK_DIMENSIONS.find((item) => item.match.test(statement));
-    if (!dim) continue;
+    const known = FALLBACK_DIMENSIONS.find((item) => item.match.test(statement) || item.match.test(cleaned));
+    if (!known && !isRequirementLine(statement) && !isRequirementLine(cleaned)) continue;
+    const dim = known
+      ? {
+          dimension: known.dimension,
+          unresolvedVariable: known.unresolvedVariable,
+          measurableForm: known.measurableForm,
+        }
+      : genericDimension(cleaned);
     if (!quoteInSource(sourceText, cleaned) && !quoteInSource(sourceText, statement)) continue;
     claims.push({
       dimension: dim.dimension,

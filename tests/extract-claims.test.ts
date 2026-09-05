@@ -23,6 +23,26 @@ Hybrid work with Seoul hub.
 Hands-on coding remains a majority of the role.`;
 
 describe("extractClaimsFromJobText", () => {
+  it("keeps Korean Wanted bullets even when they are not travel or hybrid work", () => {
+    const source = `당사는 K-Beauty 기반의 신규 뷰티 브랜드입니다.
+• 화장품 제품 기획 및 개발 업무 7~10년 이상의 경력을 보유하신 분
+• 기획 및 전략: 시장 트렌드 및 경쟁사 분석을 통한 신제품 기획 및 개발 전략 수립
+• 영어 커뮤니케이션 가능자 (글로벌 소싱 및 수출 제품 개발 예정)`;
+    const result = extractClaimsFromJobText({
+      company: "리에종드로렌",
+      role: "화장품 제품 개발 팀장",
+      sourceText: source,
+    });
+    expect(result.claims.length).toBeGreaterThanOrEqual(3);
+    const statements = result.claims.map((claim) => claim.employerStatement).join(" / ");
+    expect(statements).toContain("7~10년");
+    expect(statements).toContain("신제품 기획");
+    expect(statements).not.toContain("당사는 K-Beauty");
+    for (const claim of result.claims) {
+      expect(source).toContain(claim.employerStatement);
+    }
+  });
+
   it("keeps only employer statements that appear verbatim in the source", () => {
     const result = extractClaimsFromJobText({
       company: "Atlas",
