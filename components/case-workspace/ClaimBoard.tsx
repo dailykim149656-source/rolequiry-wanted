@@ -81,8 +81,8 @@ function ClaimCard({
       : claim.kind === CLAIM_KIND.EMPLOYER_POLICY
         ? "문서화된 정책 · 조사 순위 밖"
         : claim.probeEligible
-          ? "다음 질문 순위에 포함됨"
-          : "근거가 있어 지금은 조사가 급하지 않음";
+          ? "다음 질문 순위에 들어감"
+          : "근거가 있어 지금은 급하지 않음";
 
   return (
     <article

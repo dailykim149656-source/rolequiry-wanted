@@ -39,7 +39,7 @@ export default function Home() {
     const urlValue = String(form.get("source") ?? source).trim();
     const textValue = String(form.get("paste") ?? pasteText).trim();
     if (!urlValue && !textValue) {
-      setError("원티드 공고 URL 또는 공고 텍스트를 넣어 주세요.");
+      setError("원티드 공고 주소나 공고 글을 넣어 주세요.");
       return;
     }
     setPending(true);
@@ -67,12 +67,12 @@ export default function Home() {
         }>;
       };
       if (!response.ok) {
-        setError(payload.error ?? "공고를 읽지 못했습니다. 텍스트로 붙여넣어 보세요.");
+        setError(payload.error ?? "공고를 읽지 못했습니다. 글로 붙여넣어 보세요.");
         setPasteOpen(true);
         return;
       }
       if (!payload.claims?.length) {
-        setError("검증할 문장을 찾지 못했습니다. 공고 원문을 텍스트로 붙여넣어 주세요.");
+        setError("확인할 문장을 찾지 못했습니다. 공고 원문을 글로 붙여넣어 주세요.");
         setPasteOpen(true);
         return;
       }
@@ -89,7 +89,7 @@ export default function Home() {
       );
       router.push("/case?imported=1");
     } catch {
-      setError("공고를 읽지 못했습니다. 텍스트로 붙여넣어 보세요.");
+      setError("공고를 읽지 못했습니다. 글로 붙여넣어 보세요.");
       setPasteOpen(true);
     } finally {
       setPending(false);

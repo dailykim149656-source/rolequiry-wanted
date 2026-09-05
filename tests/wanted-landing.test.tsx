@@ -27,7 +27,7 @@ describe("Wanted Edition landing", () => {
     );
     expect(
       screen.getByRole("heading", {
-        name: "입사 전에, 이 역할이 나와 맞는지 더 깊이 알아보세요.",
+        name: "입사하기 전에, 이 일이 나와 맞는지 한번 더 보세요.",
       }),
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "공고 분석하기" })).toBeTruthy();
@@ -44,7 +44,7 @@ describe("Wanted Edition landing", () => {
     fireEvent.click(screen.getByRole("button", { name: "EN" }));
     expect(
       screen.getByRole("heading", {
-        name: "Before you join, see whether this role actually fits.",
+        name: "Before you join, check whether this job actually fits.",
       }),
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Analyze posting" })).toBeTruthy();
@@ -95,10 +95,10 @@ describe("Wanted Edition sample case", () => {
       </LocaleProvider>,
     );
     expect(screen.getByRole("heading", { name: "Forward Deployed Engineer" })).toBeTruthy();
-    expect(screen.getByText("공고에서 확인되는 기대사항")).toBeTruthy();
-    expect(screen.getByText("공개정보에서 확인되는 조건과 신호")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "다음으로 확인할 항목" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "이 항목 조사하기" })).toBeTruthy();
+    expect(screen.getByText("공고가 말하는 기대")).toBeTruthy();
+    expect(screen.getByText("밖에서 보이는 조건")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "다음에 볼 것" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "이 항목 찾아보기" })).toBeTruthy();
     expect(screen.getByText(/잘 맞음/)).toBeTruthy();
     expect(screen.queryByText("Active probe")).toBeNull();
     expect(screen.queryByRole("button", { name: "Export case JSON" })).toBeNull();
@@ -106,7 +106,7 @@ describe("Wanted Edition sample case", () => {
     expect(screen.queryByText("Priority not set")).toBeNull();
     expect(screen.queryByText("What is settled, what is still open, and what to ask next.")).toBeNull();
     expect(screen.queryByText("Priorities ready")).toBeNull();
-    expect(screen.getByText("이 항목부터 조사하면 됩니다")).toBeTruthy();
+    expect(screen.getByText("이 항목부터 보면 됩니다")).toBeTruthy();
     expect(screen.queryByText("Due diligence dossier")).toBeNull();
     expect(screen.queryByText(/decision blocker/)).toBeNull();
     const ownership = screen.getByTestId("claim-technical-ownership");
@@ -140,11 +140,11 @@ describe("Wanted Edition sample case", () => {
       </LocaleProvider>,
     );
     fireEvent.click(screen.getByRole("button", { name: "EN" }));
-    expect(screen.getByRole("heading", { name: "What the posting claims" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "What to check next" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Investigate this item" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "What the posting says" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "What to look at next" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Look this up" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "KO" }));
-    expect(screen.getByText("공고에서 확인되는 기대사항")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "이 항목 조사하기" })).toBeTruthy();
+    expect(screen.getByText("공고가 말하는 기대")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "이 항목 찾아보기" })).toBeTruthy();
   });
 });

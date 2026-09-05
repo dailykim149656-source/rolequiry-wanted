@@ -227,7 +227,7 @@ export function CaseApp() {
   };
 
   const leaveFeedback = async () => {
-    const note = window.prompt("이 분석이 지원 판단에 도움이 됐나요? 한 줄만 적어 주세요.");
+    const note = window.prompt("지원할지 판단하는 데 도움이 됐나요? 한 줄만 적어 주세요.");
     if (!note || !note.trim()) return;
     try {
       const response = await fetch("/api/feedback", {

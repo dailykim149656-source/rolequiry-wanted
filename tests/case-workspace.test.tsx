@@ -212,7 +212,7 @@ describe("case workspace status", () => {
   it("does not tell a fully prioritized demo case to set priorities", () => {
     renderWorkspace();
 
-    expect(screen.getByText("Priorities ready")).toBeTruthy();
+    expect(screen.getByText("Start with this item")).toBeTruthy();
     expect(screen.queryByText(/Set your priorities, then/)).toBeNull();
   });
 
@@ -236,7 +236,7 @@ describe("case workspace status", () => {
       "Ties use stable dimension text, then claim ID.",
     );
     expect(explanation?.textContent).toContain(
-      "transparent heuristic, not a predictive fit score",
+      "public ranking rule, not a fit score",
     );
   });
 
@@ -257,7 +257,7 @@ describe("case workspace status", () => {
     renderWorkspace(store);
 
     expect(
-      screen.getAllByText(/Your judgment activates the ranking/),
+      screen.getAllByText(/Pick what matters, then the next item is set/),
     ).toHaveLength(1);
   });
 
