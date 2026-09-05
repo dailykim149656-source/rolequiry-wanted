@@ -9,5 +9,7 @@ describe("wanted eval harness", () => {
     expect(report.falseCertaintyRate).toBeLessThanOrEqual(1);
     expect(report.claimPrecision).toBeGreaterThan(0);
     expect(report.metrics).toContain("falseCertaintyRate");
+    expect(report.metrics).toContain("citationSupport");
+    expect(report.metrics).toContain("verifierAccuracy");
   });
 });

@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "eval": "vitest run tests/eval-harness.test.ts"
+    "eval": "bun evals/cli.ts"
   },
   "dependencies": {
     "next": "16.3.3",

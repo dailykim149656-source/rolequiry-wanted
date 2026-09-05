@@ -86,6 +86,8 @@ describe("Wanted Edition sample case", () => {
         onRank={() => undefined}
         onRecordAnswer={undefined}
         onReset={() => undefined}
+        onShare={() => undefined}
+        onFeedback={() => undefined}
         snapshot={snapshot}
         webmcpCount={0}
         webmcpDiagnostics={[]}
@@ -110,6 +112,8 @@ describe("Wanted Edition sample case", () => {
     const ownership = screen.getByTestId("claim-technical-ownership");
     expect(ownership.textContent).toContain("Technical ownership · 매우 중요");
     expect(ownership.textContent).not.toContain("Technical ownership · 매우 중요 · 긴장");
+    expect(screen.getAllByRole("button", { name: "결과 공유" }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "피드백 남기기" })).toBeTruthy();
   });
 
   it("switches chrome copy between Korean and English", () => {
@@ -127,6 +131,8 @@ describe("Wanted Edition sample case", () => {
         onRank={() => undefined}
         onRecordAnswer={undefined}
         onReset={() => undefined}
+        onShare={() => undefined}
+        onFeedback={() => undefined}
         snapshot={snapshot}
         webmcpCount={0}
         webmcpDiagnostics={[]}

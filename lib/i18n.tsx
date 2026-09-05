@@ -97,6 +97,11 @@ const COPY = {
     employerClaims: "회사 공고 원문",
     langKo: "KO",
     langEn: "EN",
+    shareResult: "결과 공유",
+    leaveFeedback: "피드백 남기기",
+    feedbackPrompt: "이 분석이 지원 판단에 도움이 됐나요? 한 줄만 적어 주세요.",
+    feedbackThanks: "피드백을 기록했습니다.",
+    feedbackFailed: "피드백을 저장하지 못했습니다.",
   },
   en: {
     analyze: "Analyze posting",
@@ -177,6 +182,11 @@ const COPY = {
     employerClaims: "Employer claims",
     langKo: "KO",
     langEn: "EN",
+    shareResult: "Share result",
+    leaveFeedback: "Leave feedback",
+    feedbackPrompt: "Did this help you decide whether to apply? One sentence is enough.",
+    feedbackThanks: "Feedback saved.",
+    feedbackFailed: "Could not save feedback.",
   },
 } as const;
 

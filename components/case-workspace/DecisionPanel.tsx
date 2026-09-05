@@ -18,10 +18,14 @@ export function DecisionPanel({
   snapshot,
   className = "",
   onInvestigate,
+  onShare,
+  onFeedback,
 }: {
   readonly snapshot: CaseSnapshot;
   readonly className?: string;
   readonly onInvestigate?: () => void;
+  readonly onShare?: () => void;
+  readonly onFeedback?: () => void;
 }) {
   const selected = snapshot.derived.claims.find(
     (claim) => claim.id === snapshot.activeProbeId,
@@ -66,6 +70,24 @@ export function DecisionPanel({
           type="button"
         >
           {copy.copyQuestion}
+        </button>
+      ) : null}
+      {onShare ? (
+        <button
+          className="mt-2 h-10 w-full rounded-full border border-[#e1e2e4] bg-white text-sm font-bold"
+          onClick={onShare}
+          type="button"
+        >
+          {copy.shareResult}
+        </button>
+      ) : null}
+      {onFeedback ? (
+        <button
+          className="mt-2 h-10 w-full rounded-full border border-[#e1e2e4] bg-white text-sm font-bold"
+          onClick={onFeedback}
+          type="button"
+        >
+          {copy.leaveFeedback}
         </button>
       ) : null}
       {question ? (

@@ -226,6 +226,28 @@ export function CaseApp() {
     }
   };
 
+  const leaveFeedback = async () => {
+    const note = window.prompt("이 분석이 지원 판단에 도움이 됐나요? 한 줄만 적어 주세요.");
+    if (!note || !note.trim()) return;
+    try {
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          note: note.trim(),
+          role: snapshot.source.role,
+          company: snapshot.source.company,
+        }),
+      });
+      setCaseFileStatus({
+        error: !response.ok,
+        message: response.ok ? "피드백을 기록했습니다." : "피드백을 저장하지 못했습니다.",
+      });
+    } catch {
+      setCaseFileStatus({ error: true, message: "피드백을 저장하지 못했습니다." });
+    }
+  };
+
   return (
     <CaseWorkspace
       caseFileError={caseFileStatus?.error ?? false}
@@ -239,6 +261,7 @@ export function CaseApp() {
       onRecordAnswer={canned ? () => store.recordAnswer(canned) : undefined}
       onReset={store.reset}
       onShare={shareCase}
+      onFeedback={leaveFeedback}
       snapshot={snapshot}
       webmcpCount={webmcpCount}
       webmcpDiagnostics={webmcpDiagnostics}

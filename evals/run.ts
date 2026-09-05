@@ -16,6 +16,9 @@ export function runWantedEval() {
   let goldCount = 0;
   let falseCertainty = 0;
   let verifierTrials = 0;
+  let citationSupport = 0;
+  let citationTrials = 0;
+  let verifierAccuracy = 0;
   for (const item of cases) {
     const extracted = extractClaimsFromJobText({
       company: item.id,
@@ -51,6 +54,16 @@ export function runWantedEval() {
       sourceUrl: "https://example.com/lunch",
     });
     if (verdict.verificationStatus === "VERIFIED") falseCertainty += 1;
+    const supported = verifyEvidence({
+      employerStatement: item.goldQuotes[0] ?? "",
+      evidenceText: item.goldQuotes[0] ?? "",
+      sourceUrl: "https://example.com/posting",
+    });
+    citationTrials += 1;
+    if (supported.verificationStatus === "VERIFIED" && supported.stance === "SUPPORTS") {
+      citationSupport += 1;
+    }
+    if (verdict.verificationStatus === "INSUFFICIENT") verifierAccuracy += 1;
   }
   const claimPrecision =
     truePositives + falsePositives === 0
@@ -61,6 +74,8 @@ export function runWantedEval() {
     cases: cases.length,
     claimPrecision,
     falseCertaintyRate,
+    citationSupport: citationTrials === 0 ? 0 : citationSupport / citationTrials,
+    verifierAccuracy: verifierTrials === 0 ? 0 : verifierAccuracy / verifierTrials,
     metrics: [
       "claimPrecision",
       "falseCertaintyRate",
@@ -69,3 +84,4 @@ export function runWantedEval() {
     ],
   };
 }
+

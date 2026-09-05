@@ -30,6 +30,7 @@ type CaseWorkspaceProps = {
   readonly onRank: () => void;
   readonly onRecordAnswer: (() => void) | undefined;
   readonly onShare?: () => void;
+  readonly onFeedback?: () => void;
 };
 
 export function CaseWorkspace({
@@ -47,6 +48,7 @@ export function CaseWorkspace({
   onRank,
   onRecordAnswer,
   onShare,
+  onFeedback,
 }: CaseWorkspaceProps) {
   const { copy } = useLocale();
   return (
@@ -59,6 +61,8 @@ export function CaseWorkspace({
             className="lg:col-start-2 lg:row-start-1"
             onInvestigate={onRank}
             snapshot={snapshot}
+            {...(onShare ? { onShare } : {})}
+            {...(onFeedback ? { onFeedback } : {})}
           />
           <div className="lg:col-start-1 lg:row-start-1">
             <ClaimBoard
