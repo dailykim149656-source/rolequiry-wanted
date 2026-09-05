@@ -50,8 +50,10 @@ export function publicSearchQuery(input: {
   readonly unresolvedVariable: string;
   readonly counter?: boolean;
 }): string {
-  const counter = input.counter ? "후기 OR 실제 OR 반박 OR review" : "";
-  return [input.company, input.role, input.unresolvedVariable, counter]
+  const experience = input.counter
+    ? "micromanagement OR 승인 절차 OR day-to-day friction OR team experience"
+    : "first-hand experience OR worked at OR engineering culture OR day-to-day";
+  return [input.company, input.role, experience, input.unresolvedVariable]
     .filter(Boolean)
     .join(" ")
     .replace(/\s+/g, " ")
@@ -102,6 +104,24 @@ export function isLowQualityHit(hit: WebSearchHit): boolean {
     return true;
   }
   return LOW_QUALITY_TITLE.test(hit.title);
+}
+
+const RESTRICTED_FETCH_HOSTS = [
+  "teamblind.com",
+  "blind.com",
+  "glassdoor.com",
+  "rememberapp.co.kr",
+];
+
+export function isRestrictedFetchHost(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+    return RESTRICTED_FETCH_HOSTS.some(
+      (blocked) => host === blocked || host.endsWith("." + blocked),
+    );
+  } catch {
+    return true;
+  }
 }
 
 export function isSameSource(left: string, right: string): boolean {

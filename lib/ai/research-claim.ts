@@ -4,6 +4,7 @@ import { chatJson } from "@/lib/ai/client";
 import { hostedAiConfig } from "@/lib/ai/env";
 import {
   isLowQualityHit,
+  isRestrictedFetchHost,
   isSameSource,
   publicSearchQuery,
   searchPublicWeb,
@@ -62,15 +63,25 @@ async function fetchSourceText(url: string): Promise<string> {
   }
 }
 
-function sourceKindFor(url: string, companyWebsite?: string): ResearchSourceKind {
-  if (!companyWebsite) return "FIRST_PERSON_EXPERIENCE";
+function sourceKindFor(
+  url: string,
+  text: string,
+  companyWebsite?: string,
+): ResearchSourceKind {
   try {
     const hitHost = new URL(url).hostname.replace(/^www\./, "");
-    const companyHost = new URL(companyWebsite).hostname.replace(/^www\./, "");
-    return hitHost === companyHost ? "EMPLOYER_OFFICIAL" : "FIRST_PERSON_EXPERIENCE";
+    if (companyWebsite) {
+      const companyHost = new URL(companyWebsite).hostname.replace(/^www\./, "");
+      if (hitHost === companyHost) return "EMPLOYER_OFFICIAL";
+    }
   } catch {
     return "FIRST_PERSON_EXPERIENCE";
   }
+  const body = text.toLowerCase();
+  if (/i worked|we shipped|저는 .{0,12}일했|전직|현직|우리 팀/.test(body)) {
+    return "FIRST_PERSON_EXPERIENCE";
+  }
+  return "FIRST_PERSON_EXPERIENCE";
 }
 
 async function candidatesFromHits(
@@ -79,7 +90,7 @@ async function candidatesFromHits(
 ): Promise<ResearchCandidate[]> {
   const posting = input.jobPostingUrl;
   const unique = hits.filter((hit) => {
-    if (isLowQualityHit(hit)) return false;
+    if (isLowQualityHit(hit) || isRestrictedFetchHost(hit.url)) return false;
     if (posting && isSameSource(hit.url, posting)) return false;
     return true;
   });
@@ -95,7 +106,7 @@ async function candidatesFromHits(
         id: `hit-${index}`,
         sourceUrl: hit.url,
         sourceLabel: hit.title || hit.url,
-        sourceKind: sourceKindFor(hit.url, input.companyWebsite),
+        sourceKind: sourceKindFor(hit.url, text, input.companyWebsite),
         text,
         stance: verdict.stance,
         verificationStatus: verdict.verificationStatus,
@@ -174,7 +185,7 @@ async function hostedResearchQueries(input: ResearchClaimInput): Promise<Researc
   const proposed = await chatJson<{ supportQuery?: string; counterQuery?: string }>({
     model: config.researchModel,
     system:
-      'Return JSON {supportQuery, counterQuery} for one unresolved job-fit question. Queries must be short web searches, not answers. Include a counterevidence query.',
+      'Return JSON {supportQuery, counterQuery}. Short open-web searches for first-hand team experience, not review-site names. Support: worked at / day-to-day / engineering culture. Counter: approval process / micromanagement / limited decision rights. Never name Blind, Glassdoor, or Remember.',
     user: JSON.stringify({
       company: input.company,
       role: input.role,

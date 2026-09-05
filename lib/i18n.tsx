@@ -25,9 +25,9 @@ const COPY = {
     sampleFirst: "샘플로 먼저 보기",
     otherPosting: "다른 공고 보기",
     check: "확인",
-    landingTitle: "입사하기 전에, 이 일이 나와 맞는지 한번 더 보세요.",
+    landingTitle: "입사하기 전에, 이 일을 판단할 근거를 한번 더 보세요.",
     landingLede:
-      "원티드 공고 주소를 붙여넣으세요. Rolequiry가 공고와 공개된 정보를 같이 보고, 맞는 점, 더 볼 점, 면접에서 물을 점을 정리합니다.",
+      "원티드 공고 주소를 붙여넣으세요. Rolequiry가 공고와 공개된 정보를 같이 보고, 확인된 점, 더 볼 점, 면접에서 물을 점을 정리합니다.",
     sourceLabel: "원티드 채용공고 URL",
     samplesNow: "지금 볼 수 있는 샘플",
     claims: "공고가 말하는 기대",
@@ -114,7 +114,7 @@ const COPY = {
     sampleFirst: "See a sample first",
     otherPosting: "Analyze another posting",
     check: "Check",
-    landingTitle: "Before you join, check whether this job actually fits.",
+    landingTitle: "Before you join, check the evidence behind this job.",
     landingLede:
       "Paste a Wanted job URL. Rolequiry compares the posting with public information and lists what fits, what to double-check, and what to ask.",
     sourceLabel: "Wanted job posting URL",

@@ -27,7 +27,7 @@ describe("Wanted Edition landing", () => {
     );
     expect(
       screen.getByRole("heading", {
-        name: "입사하기 전에, 이 일이 나와 맞는지 한번 더 보세요.",
+        name: "입사하기 전에, 이 일을 판단할 근거를 한번 더 보세요.",
       }),
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "공고 분석하기" })).toBeTruthy();
@@ -44,7 +44,7 @@ describe("Wanted Edition landing", () => {
     fireEvent.click(screen.getByRole("button", { name: "EN" }));
     expect(
       screen.getByRole("heading", {
-        name: "Before you join, check whether this job actually fits.",
+        name: "Before you join, check the evidence behind this job.",
       }),
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Analyze posting" })).toBeTruthy();

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { researchClaim } from "@/lib/ai/research-claim";
-import { parseDuckDuckGoHits, isLowQualityHit, searchPublicWeb } from "@/lib/ai/web-search";
+import { parseDuckDuckGoHits, isLowQualityHit, isRestrictedFetchHost, searchPublicWeb } from "@/lib/ai/web-search";
 import { chatgptDeepDiveHref, chatgptDeepDivePrompt, researchQueriesFromModel } from "@/lib/ai/research-claim";
 import { verifyEvidence } from "@/lib/ai/verify-evidence";
 
@@ -204,6 +204,32 @@ describe("parseDuckDuckGoHits", () => {
   });
 
 describe("research query quality", () => {
+  it("does not name Blind or Glassdoor in fallback queries", () => {
+    const queries = researchQueriesFromModel({
+      company: "리에종드로렌",
+      role: "화장품 제품 개발 팀장",
+      employerStatement: "R&D 및 테스트: 성분, 제형, 패키지 개발 및 테스트 진행",
+      unresolvedVariable: "사내에서 직접 테스트를 하나?",
+    });
+    expect(queries.support.toLowerCase()).not.toContain("blind");
+    expect(queries.support.toLowerCase()).not.toContain("glassdoor");
+    expect(queries.counter.toLowerCase()).not.toContain("blind");
+    expect(queries.support).toContain("리에종드로렌");
+    expect(queries.support).toMatch(/경험|culture|worked|day-to-day|team/i);
+  });
+
+  it("skips restricted review hosts before fetching their body", () => {
+    expect(
+      isRestrictedFetchHost("https://www.blind.com/company/liaison"),
+    ).toBe(true);
+    expect(
+      isRestrictedFetchHost("https://www.glassdoor.com/Reviews/foo.htm"),
+    ).toBe(true);
+    expect(
+      isRestrictedFetchHost("https://blog.naver.com/foo/1"),
+    ).toBe(false);
+  });
+
   it("drops course-ad hits before citing them", () => {
     expect(
       isLowQualityHit({
