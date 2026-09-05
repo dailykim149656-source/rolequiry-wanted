@@ -7,6 +7,7 @@ import {
   type Evidence,
 } from "@/lib/domain/types";
 import { Icon, type IconName } from "./Icon";
+import { useLocale } from "@/lib/i18n";
 
 type EvidenceTone = "challenged" | "empty" | "mixed" | "neutral" | "supported";
 
@@ -25,6 +26,7 @@ function evidenceTone(items: readonly Evidence[]): EvidenceTone {
 }
 
 export function EvidenceSignals({ claim }: { readonly claim: DerivedClaim }) {
+  const { copy } = useLocale();
   const employer = claim.evidence.filter(
     (item) => item.scope === AUTHORITY_SCOPE.EMPLOYER_STATED,
   );
@@ -40,19 +42,19 @@ export function EvidenceSignals({ claim }: { readonly claim: DerivedClaim }) {
       <EvidenceSignal
         count={employer.length}
         icon="building"
-        label="Employer source"
+        label={copy.employerSource}
         tone={evidenceTone(employer)}
       />
       <EvidenceSignal
         count={reports.length}
         icon="people"
-        label="Public"
+        label={copy.publicSource}
         tone={evidenceTone(reports)}
       />
       <EvidenceSignal
         count={interview.length}
         icon="message"
-        label="Interview"
+        label={copy.interviewSource}
         tone={evidenceTone(interview)}
       />
     </div>
@@ -101,6 +103,7 @@ export function EvidenceList({
   readonly claim: DerivedClaim;
   readonly caseOrganization?: string;
 }) {
+  const { copy } = useLocale();
   const groups = [
     {
       key: AUTHORITY_SCOPE.EMPLOYER_STATED,
@@ -122,7 +125,7 @@ export function EvidenceList({
   return (
     <details className="mt-3 border-t border-line pt-3 text-sm">
       <summary className="min-h-11 cursor-pointer rounded-lg px-1 py-2 font-medium text-secondary outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-brand/30">
-        View evidence ({claim.evidence.length})
+        {copy.viewEvidence} ({claim.evidence.length})
       </summary>
       <div className="mt-2 grid gap-3">
         {groups.map((group) => {

@@ -18,6 +18,7 @@ import {
   recordResearchEvidenceTool,
   selectDecisionChanger,
 } from "@/lib/webmcp/tools";
+import { LocaleProvider } from "@/lib/i18n";
 
 afterEach(cleanup);
 
@@ -53,6 +54,7 @@ function renderWorkspace(
   } = {},
 ) {
   render(
+    <LocaleProvider initial="en">
     <CaseWorkspace
       caseFileError={caseFiles.error ?? false}
       caseFileMessage={caseFiles.message ?? null}
@@ -67,7 +69,8 @@ function renderWorkspace(
       snapshot={store.getState()}
       webmcpCount={webmcpCount}
       webmcpDiagnostics={webmcpDiagnostics}
-    />,
+    />
+    </LocaleProvider>,
   );
 }
 

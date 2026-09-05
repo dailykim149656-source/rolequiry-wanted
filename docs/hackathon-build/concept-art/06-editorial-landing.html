@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>Rolequiry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --canvas: #f4f1ea;
+      --ink: #14120f;
+      --muted: #6b675f;
+      --line: #d8d3c8;
+      --paper: #fbfaf6;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 15px/1.5 "IBM Plex Sans KR", sans-serif;
+    }
+    .page {
+      min-height: 100vh;
+      padding: 28px 56px 40px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+    header, footer { display: flex; justify-content: space-between; align-items: baseline; }
+    .wordmark { font: 600 18px/1 Newsreader, ui-serif, serif; letter-spacing: .01em; }
+    .meta { color: var(--muted); font-size: 12px; letter-spacing: .08em; }
+    main { display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: end; padding: 48px 0 24px; }
+    h1 {
+      font: 500 64px/.95 Newsreader, ui-serif, serif;
+      margin: 0 0 18px;
+      max-width: 8.2em;
+      letter-spacing: -.03em;
+    }
+    .lede { max-width: 34em; color: #3f3c36; font-size: 16px; margin: 0 0 32px; }
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .field {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      border-bottom: 1px solid var(--ink);
+      padding-bottom: 8px;
+      max-width: 560px;
+    }
+    input {
+      border: 0;
+      background: transparent;
+      font: 16px/1.4 "IBM Plex Sans KR", sans-serif;
+      color: var(--ink);
+      outline: none;
+      padding: 8px 0;
+    }
+    button {
+      border: 0;
+      background: var(--ink);
+      color: var(--paper);
+      height: 40px;
+      padding: 0 16px;
+      font: 600 13px/1 "IBM Plex Sans KR", sans-serif;
+    }
+    .alt { margin-top: 14px; color: var(--muted); font-size: 13px; }
+    .alt b { color: var(--ink); font-weight: 600; }
+    .rail {
+      border-left: 1px solid var(--line);
+      padding: 8px 0 8px 28px;
+      display: grid;
+      gap: 22px;
+    }
+    .rail h2 { margin: 0 0 6px; font: 500 22px/1.2 Newsreader, serif; }
+    .rail p { margin: 0; color: #4b473f; font-size: 14px; }
+    .idx { display: block; font-size: 11px; letter-spacing: .14em; color: var(--muted); margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="wordmark">Rolequiry</div>
+      <div class="meta">WANTED EDITION</div>
+    </header>
+    <main>
+      <section>
+        <h1>지원하기 전에,<br>공고부터 검증하세요.</h1>
+        <p class="lede">회사가 말하는 것과, 실제로 확인할 수 있는 것 사이의 간극을 찾습니다. 점수는 없습니다. 확인된 것, 아직 모르는 것, 면접에서 물을 것만 남깁니다.</p>
+        <label for="url">원티드 채용공고 URL</label>
+        <div class="field">
+          <input id="url" placeholder="https://www.wanted.co.kr/wd/..." />
+          <button>공고 분석하기</button>
+        </div>
+        <div class="alt">또는 <b>샘플로 먼저 보기</b></div>
+      </section>
+      <aside class="rail">
+        <div><span class="idx">01 CLAIMS</span><h2>회사가 말하는 것</h2><p>공고 원문 문장만 남깁니다.</p></div>
+        <div><span class="idx">02 EVIDENCE</span><h2>웹에서 확인되는 것</h2><p>공식 자료와 공개정보로 교차검증합니다.</p></div>
+        <div><span class="idx">03 QUESTIONS</span><h2>면접에서 물어볼 것</h2><p>공개정보로 안 끝나는 불확실성만 질문으로 바꿉니다.</p></div>
+      </aside>
+    </main>
+    <footer>
+      <div class="meta">NO SCORE · NO LOGIN</div>
+      <div class="meta">DECISION BRIEF</div>
+    </footer>
+  </div>
+</body>
+</html>

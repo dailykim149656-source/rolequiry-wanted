@@ -5,6 +5,8 @@ import {
   recordResearchEvidence,
   setClaimImportance,
 } from "@/lib/domain/derive-case";
+import { recordVerifiedResearchEvidence } from "@/lib/domain/verified-evidence";
+import type { VerifiedResearchEvidenceInput } from "@/lib/domain/verified-evidence";
 import { MAX_EVIDENCE_PER_CLAIM } from "@/lib/domain/limits";
 import type {
   CandidatePriorityInput,
@@ -206,6 +208,20 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
     recordResearch(input: ResearchEvidenceInput) {
       assertEvidenceCapacity(input.claimId);
       const source = recordResearchEvidence(state.source, input);
+      const derived = deriveCase(source);
+      state = {
+        source,
+        derived,
+        activeProbeId: state.activeProbeId,
+        rankingVisible: false,
+        selectionState: SELECTION_STATE.EVIDENCE_UPDATED,
+        prioritiesTouched: state.prioritiesTouched,
+      };
+      emit();
+    },
+    recordVerifiedResearch(input: VerifiedResearchEvidenceInput) {
+      assertEvidenceCapacity(input.claimId);
+      const source = recordVerifiedResearchEvidence(state.source, input);
       const derived = deriveCase(source);
       state = {
         source,

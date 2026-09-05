@@ -8,6 +8,7 @@ import {
 } from "@/lib/domain/types";
 import { EvidenceList, EvidenceSignals } from "./Evidence";
 import { Icon, type IconName } from "./Icon";
+import { useLocale } from "@/lib/i18n";
 
 const IMPORTANCE_OPTIONS = [
   IMPORTANCE.LOW,
@@ -28,35 +29,17 @@ export function ClaimBoard({
     importance: Importance,
   ) => void;
 }) {
+  const { copy } = useLocale();
   return (
     <section
-      aria-labelledby="claim-board-title"
-      className={`surface-shadow rounded-[1.35rem] border border-line bg-surface p-3 sm:p-5 ${className}`}
+      aria-label="Claim Board"
+      className={`${className}`}
       id="claim-board"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-1 pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Icon className="size-5" name="briefcase" />
-            <h2 className="text-lg font-semibold" id="claim-board-title">
-              Claim Board
-            </h2>
-          </div>
-          <p className="mt-1 max-w-2xl text-sm text-muted">
-            Employer claims, your priorities, and the evidence behind each one.
-          </p>
-        </div>
-        <span className="rounded-full bg-brand-soft px-3 py-1.5 text-xs font-semibold text-brand">
-          {
-            snapshot.derived.claims.filter(
-              (claim) => claim.candidatePrioritySet,
-            ).length
-          }{" "}
-          prioritized
-        </span>
-      </div>
-
-      <div className="mt-4 grid gap-3">
+      <h2 className="text-lg font-bold" id="claim-board-title">
+        {copy.claims}
+      </h2>
+      <div>
         {snapshot.derived.claims.map((claim) => (
           <ClaimCard
             active={claim.id === snapshot.activeProbeId}
@@ -86,41 +69,42 @@ function ClaimCard({
   ) => void;
 }) {
   const isSet = claim.candidatePrioritySet;
+  const { copy, locale } = useLocale();
   const rankingNote = !isSet
-    ? "Not in ranking yet"
-    : claim.kind === CLAIM_KIND.EMPLOYER_POLICY
-      ? "Written policy · tracked outside probe ranking"
-      : claim.probeEligible
-        ? "Included in the next-question ranking"
-        : "Evidence currently lowers the need to probe";
+    ? copy.notInRanking
+    : locale === "en"
+      ? claim.kind === CLAIM_KIND.EMPLOYER_POLICY
+        ? "Written policy · tracked outside probe ranking"
+        : claim.probeEligible
+          ? "Included in the next-question ranking"
+          : "Evidence currently lowers the need to probe"
+      : claim.kind === CLAIM_KIND.EMPLOYER_POLICY
+        ? "문서화된 정책 · 조사 순위 밖"
+        : claim.probeEligible
+          ? "다음 질문 순위에 포함됨"
+          : "근거가 있어 지금은 조사가 급하지 않음";
 
   return (
     <article
-      className={`group rounded-2xl border p-4 transition-[border-color,box-shadow,background-color] duration-150 focus-within:border-brand/50 focus-within:shadow-sm hover:border-strong ${
-        active
-          ? "border-ink bg-quiet shadow-sm ring-1 ring-ink/10"
-          : isSet
-            ? "border-line bg-surface"
-            : "border-dashed border-strong bg-quiet/45"
-      }`}
+      className="border-t border-[#ececec] py-3.5"
       data-active={String(active)}
       data-priority-set={String(isSet)}
       data-testid={`claim-${claim.id}`}
     >
       <div className="flex gap-3 sm:gap-4">
-        <ClaimGlyph claim={claim} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-col items-start gap-2 sm:flex-row sm:justify-between sm:gap-3">
             <div className="min-w-0 flex-1">
               {active ? (
-                <p className="mb-1 inline-flex rounded-full bg-ink px-2 py-0.5 text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-white">
+                <p className="sr-only">
                   Active probe
                 </p>
               ) : null}
-              <h3 className="font-semibold text-ink">{claim.dimension}</h3>
-              <blockquote className="mt-1 text-sm leading-6 text-secondary">
-                “{claim.employerStatement}”
-              </blockquote>
+              <q className="text-[15px] font-bold">{claim.employerStatement}</q>
+              <p className="mt-1.5 text-[13px] text-[#666]">
+                {claim.dimension} · {isSet ? claim.importance : "미설정"} ·{" "}
+                {statusLabel(isSet ? claim.status : "PRIORITY_NOT_SET")}
+              </p>
             </div>
             <StatusBadge status={isSet ? claim.status : "PRIORITY_NOT_SET"} />
           </div>
@@ -149,14 +133,15 @@ function PriorityControl({
     importance: Importance,
   ) => void;
 }) {
+  const { copy } = useLocale();
   return (
     <label className="block text-xs font-medium text-muted">
       <span className="mb-1.5 flex items-center gap-1.5">
         <Icon className="size-3.5" name="flag" />
-        Candidate priority
+        {copy.priorityLabel}
       </span>
       <select
-        aria-label={`Candidate priority for ${claim.dimension}`}
+        aria-label={`${copy.priorityLabel} ${claim.dimension}`}
         className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20 ${
           claim.candidatePrioritySet
             ? "border-brand/30 bg-brand-soft text-brand"
@@ -168,11 +153,17 @@ function PriorityControl({
         value={claim.candidatePrioritySet ? claim.importance : ""}
       >
         <option disabled value="">
-          Set priority
+          {copy.setPriority}
         </option>
         {IMPORTANCE_OPTIONS.map((value) => (
           <option key={value} value={value}>
-            {`${value[0]}${value.slice(1).toLowerCase()}`}
+            {value === "LOW"
+              ? copy.importanceLow
+              : value === "MEDIUM"
+                ? copy.importanceMedium
+                : value === "HIGH"
+                  ? copy.importanceHigh
+                  : copy.importanceCritical}
           </option>
         ))}
       </select>
@@ -182,23 +173,31 @@ function PriorityControl({
 
 type DisplayStatus = DerivedClaim["status"] | "PRIORITY_NOT_SET";
 
+function statusLabel(status: DisplayStatus): string {
+  if (status === "SUPPORTED") return "확인됨";
+  if (status === "CHALLENGED") return "긴장";
+  if (status === "MATERIAL_AMBIGUITY") return "긴장";
+  if (status === "PRIORITY_NOT_SET") return "미설정";
+  return "미확인";
+}
+
 function StatusBadge({ status }: { readonly status: DisplayStatus }) {
   const configs: Record<DisplayStatus, readonly [IconName, string, string]> = {
-    SUPPORTED: ["check", "Supported", "bg-supported-soft text-supported"],
-    CHALLENGED: ["tension", "Challenged", "bg-challenged-soft text-challenged"],
+    SUPPORTED: ["check", "확인됨", "bg-supported-soft text-supported"],
+    CHALLENGED: ["tension", "긴장", "bg-challenged-soft text-challenged"],
     MATERIAL_AMBIGUITY: [
       "scales",
-      "Material ambiguity",
+      "긴장",
       "bg-brand-soft text-brand",
     ],
     UNVERIFIED: [
       "question",
-      "Unverified",
+      "미확인",
       "bg-unverified-soft text-unverified",
     ],
     PRIORITY_NOT_SET: [
       "flag",
-      "Priority not set",
+      "미설정",
       "bg-unverified-soft text-unverified",
     ],
   };
@@ -213,47 +212,4 @@ function StatusBadge({ status }: { readonly status: DisplayStatus }) {
       {config[1]}
     </span>
   );
-}
-
-function ClaimGlyph({ claim }: { readonly claim: DerivedClaim }) {
-  const name = claimIcon(claim.dimension);
-  const tones: Record<IconName, string> = {
-    arrow: "bg-brand-soft text-brand",
-    bell: "bg-amber-soft text-amber",
-    briefcase: "bg-brand-soft text-brand",
-    building: "bg-supported-soft text-supported",
-    check: "bg-supported-soft text-supported",
-    code: "bg-brand-soft text-brand",
-    compass: "bg-brand-soft text-brand",
-    dollar: "bg-supported-soft text-supported",
-    flag: "bg-brand-soft text-brand",
-    lightbulb: "bg-brand-soft text-brand",
-    message: "bg-brand-soft text-brand",
-    path: "bg-brand-soft text-brand",
-    people: "bg-blue-soft text-blue",
-    plane: "bg-challenged-soft text-challenged",
-    question: "bg-unverified-soft text-unverified",
-    scales: "bg-brand-soft text-brand",
-    spark: "bg-brand-soft text-brand",
-    tension: "bg-challenged-soft text-challenged",
-  };
-  return (
-    <span
-      aria-hidden="true"
-      className={`grid size-12 shrink-0 place-items-center rounded-xl sm:size-14 ${tones[name]}`}
-    >
-      <Icon className="size-6 sm:size-7" name={name} />
-    </span>
-  );
-}
-
-function claimIcon(dimension: string): IconName {
-  const value = dimension.toLowerCase();
-  if (/travel|trip|onsite|on-site/.test(value)) return "plane";
-  if (/compensation|salary|pay|bonus|equity/.test(value)) return "dollar";
-  if (/on-call|pager|incident/.test(value)) return "bell";
-  if (/customer|client|collaboration|team/.test(value)) return "people";
-  if (/ownership|technical|coding|architecture|engineering/.test(value))
-    return "code";
-  return "compass";
 }

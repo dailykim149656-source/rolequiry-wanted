@@ -3,6 +3,7 @@ import type { CaseSnapshot, FixtureId } from "@/lib/case-store";
 import { CASE_TOOL_CONTRACTS } from "@/lib/webmcp/contracts";
 import type { WebMCPToolDiagnostic } from "@/lib/webmcp/diagnostics";
 import { Icon } from "./Icon";
+import { LanguageToggle, useLocale } from "@/lib/i18n";
 
 const TOTAL_TOOLS = CASE_TOOL_CONTRACTS.length;
 
@@ -18,57 +19,34 @@ export function ProductBar({
   const hasFailure = diagnostics.some((item) => item.status === "FAILED");
   const isPending = diagnostics.some((item) => item.status === "PENDING");
   const isLive = webmcpCount === total;
-  const status = isLive
-    ? `WebMCP ${total}/${total} live`
-    : `WebMCP ${webmcpCount}/${total}`;
+  const { copy } = useLocale();
   return (
-    <header className="mb-5 flex items-center justify-between gap-4 px-1">
+    <header className="-mx-5 mb-6 flex h-[50px] items-center justify-between border-b border-[#ececec] px-5">
       <div className="flex min-w-0 items-center gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-ink text-white">
-          <Icon className="size-5" name="compass" />
-        </span>
         <div className="min-w-0 sm:flex sm:items-baseline sm:gap-4">
-          <p className="font-display text-2xl font-semibold tracking-tight">
+          <p className="text-lg font-bold tracking-tight">
             Rolequiry
-          </p>
-          <p className="hidden text-sm text-muted sm:block">
-            Interview the job before it interviews you.
           </p>
         </div>
       </div>
-      <output
-        aria-atomic="true"
-        aria-live="polite"
-        className="flex shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-medium text-secondary"
-      >
-        <span
-          className={`size-2 rounded-full ${
-            hasFailure
-              ? "bg-challenged"
-              : isLive
-                ? "bg-supported"
-                : "bg-unverified"
-          }`}
-        />
-        {hasFailure ? (
-          <>
-            <span className="sm:hidden">Registration failed</span>
-            <span className="hidden sm:inline">WebMCP registration failed</span>
-          </>
-        ) : isPending ? (
-          <>
-            <span className="sm:hidden">WebMCP registering</span>
-            <span className="hidden sm:inline">{status} · registering</span>
-          </>
-        ) : webmcpCount === 0 ? (
-          <>
-            <span className="sm:hidden">WebMCP required</span>
-            <span className="hidden sm:inline">Open in a WebMCP browser</span>
-          </>
-        ) : (
-          status
-        )}
-      </output>
+      <div className="flex items-center gap-2">
+        <Link className="rounded-full border border-[#e1e2e4] px-3 py-1.5 text-sm font-semibold" href="/case?sample=atlas-fde">
+          {copy.sample}
+        </Link>
+        <Link className="rounded-full border border-[#e1e2e4] px-3 py-1.5 text-sm font-semibold" href="/">
+          {copy.otherPosting}
+        </Link>
+        <LanguageToggle />
+        <output aria-atomic="true" aria-live="polite" className="sr-only">
+          {hasFailure
+            ? "WebMCP registration failed"
+            : isLive
+              ? `WebMCP ${total}/${total} live`
+              : isPending
+                ? "WebMCP registration pending"
+                : ""}
+        </output>
+      </div>
     </header>
   );
 }
@@ -92,50 +70,44 @@ export function DossierHeader({
   );
   const origin =
     snapshot.source.origin === "DEMO_FIXTURE" ? "Demo case" : "Imported case";
+  const { copy, locale } = useLocale();
+  const originLabel =
+    snapshot.source.origin === "DEMO_FIXTURE" ? copy.demo : copy.imported;
 
   return (
-    <section className="dossier-wash surface-shadow overflow-hidden rounded-[1.5rem] border border-line bg-surface px-5 py-6 sm:px-7 sm:py-7">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+    <section className="mb-5">
+      <div className="flex gap-4">
         <CompanyMark company={company} />
         <div className="min-w-0 flex-1">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand">
-            Candidate due diligence
-          </p>
-          <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-            {company}
-          </h1>
-          <p className="mt-1 text-lg text-secondary sm:text-xl">
+          <h1 className="text-[22px] font-bold tracking-tight">
             {snapshot.source.role}
+          </h1>
+          <p className="mt-1 text-sm font-semibold text-[#333]">{company}</p>
+          <p className="mt-0.5 text-[13px] text-[#999]">
+            {snapshot.source.id === "atlas-fde"
+              ? "서울 강남구 · 경력 4년 이상"
+              : originLabel}
           </p>
-          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-secondary">
-            <span
-              className="rounded-full bg-brand-soft px-3 py-1 font-semibold text-brand"
-              data-testid="case-origin"
-            >
-              {origin}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="rounded-full bg-[#f2f4f7] px-2.5 py-1 text-xs font-semibold text-[#333]">
+              {copy.aligned} {claims.filter((claim) => claim.status === "SUPPORTED").length}
             </span>
-            <Metric value={claims.length} label="claims" />
-            <Metric value={unresolved} label="unresolved" />
-            <Metric value={challenged} label="challenged" />
+            <span className="rounded-full bg-[#f2f4f7] px-2.5 py-1 text-xs font-semibold text-[#333]">
+              {copy.mismatch} {challenged}
+            </span>
+            <span className="rounded-full bg-[#f2f4f7] px-2.5 py-1 text-xs font-semibold text-[#333]">
+              {copy.unknown} {unresolved}
+            </span>
+            <span className="sr-only" data-testid="case-origin">
+              {locale === "en" ? origin : originLabel}
+            </span>
             {snapshot.source.id === "atlas-fde" ? (
               <Link
-                className="inline-flex min-h-11 items-center py-2 font-medium text-brand underline decoration-brand/30 underline-offset-4 hover:decoration-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+                className="inline-flex min-h-11 items-center py-2 text-sm font-medium text-[#3366ff]"
                 href="/employer/atlas-fde"
               >
                 Employer claims
               </Link>
-            ) : null}
-            {snapshot.source.sourceUrl ? (
-              <a
-                aria-label="Open agent-reported job source in a new tab"
-                className="inline-flex min-h-11 items-center gap-1.5 py-2 font-medium text-brand underline decoration-brand/30 underline-offset-4 hover:decoration-brand"
-                href={snapshot.source.sourceUrl}
-                rel="noreferrer"
-                target="_blank"
-              >
-                Job source · agent-reported
-                <Icon className="size-3.5" name="arrow" />
-              </a>
             ) : null}
           </div>
         </div>
@@ -150,12 +122,14 @@ export function CaseFileControls({
   message,
   onExport,
   onImport,
+  onShare,
 }: {
   readonly canExport: boolean;
   readonly error: boolean;
   readonly message: string | null;
   readonly onExport: () => void;
   readonly onImport: (file: File) => void;
+  readonly onShare?: () => void;
 }) {
   return (
     <section
@@ -184,6 +158,11 @@ export function CaseFileControls({
             type="button"
           >
             Export case JSON
+          </button>
+        ) : null}
+        {onShare ? (
+          <button className={controlChip(false)} onClick={onShare} type="button">
+            결과 공유
           </button>
         ) : null}
         <label
@@ -222,7 +201,7 @@ export function CompanyMark({ company }: { readonly company: string }) {
   return (
     <div
       aria-label={`${company} monogram`}
-      className="grid size-24 shrink-0 place-items-center rounded-[1.35rem] bg-ink font-display text-4xl font-semibold uppercase text-white shadow-lg shadow-ink/15 sm:size-28 sm:text-5xl"
+      className="grid size-14 shrink-0 place-items-center rounded-[12px] bg-[#1d2b4a] text-[22px] font-extrabold uppercase text-white"
       role="img"
     >
       {initials}

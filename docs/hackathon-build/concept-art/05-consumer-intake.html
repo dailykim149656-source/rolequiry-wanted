@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>05 Consumer Intake</title>
+  <style>
+    * { box-sizing:border-box; }
+    body { margin:0; background:#ecece8; font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#111; }
+    body { background:#fff; }
+    .stage { width:100vw; height:100vh; margin:0; background:#fff; overflow:hidden; }
+    nav { display:flex; justify-content:space-between; padding:22px 64px; }
+    .brand { font:600 22px ui-serif,Georgia,serif; }
+    .hero { padding:28px 64px 0; display:grid; grid-template-columns:1.05fr .95fr; gap:40px; }
+    .hero { padding:16px 64px 0; }
+    h1 { font:600 48px/1.15 ui-serif,Georgia,serif; margin:8px 0 16px; max-width:12ch; }
+    h1 { font-size:42px; }
+    .sub { color:#4b4b4b; max-width:38ch; margin:0 0 28px; }
+    .box { display:flex; flex-direction:column; gap:12px; max-width:520px; }
+    input { height:56px; border:1px solid #dededb; border-radius:16px; padding:0 16px; font-size:16px; }
+    .row { display:flex; gap:10px; }
+    .primary { height:52px; border:0; border-radius:14px; background:#181818; color:#fff; font-weight:700; padding:0 18px; }
+    .ghost { height:52px; border:1px solid #dededb; border-radius:14px; background:#fff; font-weight:600; padding:0 16px; }
+    .steps { display:flex; gap:18px; margin-top:36px; color:#4b4b4b; font-size:14px; }
+    .preview { background:#f7f7f5; border:1px solid #dededb; border-radius:24px; padding:18px; min-height:420px; }
+    .preview { min-height:360px; }
+    .mini { background:#fff; border:1px solid #dededb; border-radius:14px; padding:12px; margin-bottom:10px; }
+    .k { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#767676; font-weight:700; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <nav><div class="brand">Rolequiry</div><div>로그인 없음</div></nav>
+    <div class="hero">
+      <div>
+        <div class="k">Rolequiry</div>
+        <h1>지원하기 전에, 공고부터 검증하세요.</h1>
+        <p class="sub">공고 문장을 사실로 믿지 말고, 확인된 것과 아직 모르는 것으로 나눕니다.</p>
+        <div class="box">
+          <input placeholder="https://www.wanted.co.kr/wd/..." />
+          <div class="row">
+            <button class="primary">공고 분석하기</button>
+            <button class="ghost">샘플로 먼저 보기</button>
+          </div>
+        </div>
+        <div class="steps">
+          <div>1 공고 넣기</div>
+          <div>2 중요한 것만 고르기</div>
+          <div>3 한 가지를 조사하기</div>
+        </div>
+      </div>
+      <div class="preview">
+        <div class="mini"><div class="k">Claims</div>회사가 말하는 것</div>
+        <div class="mini"><div class="k">Evidence</div>웹에서 확인되는 것</div>
+        <div class="mini"><div class="k">Questions</div>면접에서 물어볼 것</div>
+        <div class="mini"><b>다음 decision blocker</b><p>출장 몰림 · 이 항목 조사하기</p></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

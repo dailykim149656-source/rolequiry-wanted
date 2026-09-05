@@ -105,7 +105,7 @@ describe("CaseApp persistence", () => {
 
     expect(
       screen.getByRole<HTMLSelectElement>("combobox", {
-        name: "Candidate priority for Travel",
+        name: "내 중요도 Travel",
       }).value,
     ).toBe("LOW");
   });

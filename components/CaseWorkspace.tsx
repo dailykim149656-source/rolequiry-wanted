@@ -10,6 +10,7 @@ import {
 import type { CaseSnapshot, FixtureId } from "@/lib/case-store";
 import type { Importance } from "@/lib/domain/types";
 import type { WebMCPToolDiagnostic } from "@/lib/webmcp/diagnostics";
+import { useLocale } from "@/lib/i18n";
 
 type CaseWorkspaceProps = {
   readonly snapshot: CaseSnapshot;
@@ -28,6 +29,7 @@ type CaseWorkspaceProps = {
   readonly onReset: () => void;
   readonly onRank: () => void;
   readonly onRecordAnswer: (() => void) | undefined;
+  readonly onShare?: () => void;
 };
 
 export function CaseWorkspace({
@@ -44,41 +46,49 @@ export function CaseWorkspace({
   onReset,
   onRank,
   onRecordAnswer,
+  onShare,
 }: CaseWorkspaceProps) {
+  const { copy } = useLocale();
   return (
-    <main className="min-h-dvh bg-canvas px-4 py-5 text-ink sm:px-6 sm:py-7 xl:px-8">
-      <div className="mx-auto max-w-[90rem]">
+    <main className="min-h-dvh bg-white text-[#171717]">
+      <div className="mx-auto w-full max-w-[1060px] px-5 pb-10">
         <ProductBar diagnostics={webmcpDiagnostics} webmcpCount={webmcpCount} />
         <DossierHeader snapshot={snapshot} />
-        <CaseFileControls
-          canExport={snapshot.source.origin === "AGENT_IMPORTED"}
-          error={caseFileError}
-          message={caseFileMessage}
-          onExport={onExportCase}
-          onImport={onImportCase}
-        />
-        <div className="mt-5 grid items-start gap-5 lg:grid-cols-[minmax(0,1.16fr)_minmax(23rem,0.84fr)]">
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_340px]">
           <DecisionPanel
             className="lg:col-start-2 lg:row-start-1"
+            onInvestigate={onRank}
             snapshot={snapshot}
           />
-          <ClaimBoard
-            className="lg:col-start-1 lg:row-start-1"
-            onImportanceChange={onImportanceChange}
-            snapshot={snapshot}
-          />
+          <div className="lg:col-start-1 lg:row-start-1">
+            <ClaimBoard
+              onImportanceChange={onImportanceChange}
+              snapshot={snapshot}
+            />
+            <DossierPanel snapshot={snapshot} />
+          </div>
         </div>
-        <DossierPanel snapshot={snapshot} />
-        <DemoControls
-          activeFixture={snapshot.source.id}
-          cannedAnswerLabel={cannedAnswerLabel}
-          onLoadFixture={onLoadFixture}
-          onRank={onRank}
-          onRecordAnswer={onRecordAnswer}
-          onReset={onReset}
-          webmcpCount={webmcpCount}
-          webmcpDiagnostics={webmcpDiagnostics}
-        />
+        <details className="mt-8 text-sm text-[#666]">
+          <summary className="cursor-pointer font-semibold text-[#171717]">{copy.more}</summary>
+          <CaseFileControls
+            canExport={snapshot.source.origin === "AGENT_IMPORTED"}
+            error={caseFileError}
+            message={caseFileMessage}
+            onExport={onExportCase}
+            onImport={onImportCase}
+            {...(onShare ? { onShare } : {})}
+          />
+          <DemoControls
+            activeFixture={snapshot.source.id}
+            cannedAnswerLabel={cannedAnswerLabel}
+            onLoadFixture={onLoadFixture}
+            onRank={onRank}
+            onRecordAnswer={onRecordAnswer}
+            onReset={onReset}
+            webmcpCount={webmcpCount}
+            webmcpDiagnostics={webmcpDiagnostics}
+          />
+        </details>
       </div>
     </main>
   );

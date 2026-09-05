@@ -1,0 +1,32 @@
+[
+  {
+    "id": "atlas-travel",
+    "sourceText": "Atlas is hiring a Forward Deployed Engineer in Seoul.\n50% travel is expected.\nHybrid work with Seoul hub.",
+    "goldQuotes": ["50% travel is expected.", "Hybrid work with Seoul hub."],
+    "hallucinatedQuote": "Unlimited PTO for all employees."
+  },
+  {
+    "id": "kestrel-oncall",
+    "sourceText": "Kestrel Solutions is hiring a Backend Engineer.\nOn-call is rare.\nYou will own production systems end to end.",
+    "goldQuotes": ["On-call is rare.", "You will own production systems end to end."],
+    "hallucinatedQuote": "We never page engineers."
+  },
+  {
+    "id": "harbor-hybrid",
+    "sourceText": "Harbor is hiring a Platform Engineer in Seongnam.\nHybrid work with Seoul hub.\nHands-on coding remains a majority of the role.",
+    "goldQuotes": ["Hybrid work with Seoul hub.", "Hands-on coding remains a majority of the role."],
+    "hallucinatedQuote": "100% remote forever."
+  },
+  {
+    "id": "northwind-coding",
+    "sourceText": "Northwind is hiring a Product Engineer.\nHands-on coding remains a majority of the role.\n50% travel is expected.",
+    "goldQuotes": ["Hands-on coding remains a majority of the role.", "50% travel is expected."],
+    "hallucinatedQuote": "No meetings after 3pm."
+  },
+  {
+    "id": "wanted-seoul",
+    "sourceText": "A Seoul company is hiring a Forward Deployed Engineer.\n50% travel is expected.\nYou will own production systems end to end.",
+    "goldQuotes": ["50% travel is expected.", "You will own production systems end to end."],
+    "hallucinatedQuote": "Guaranteed promotion in 6 months."
+  }
+]

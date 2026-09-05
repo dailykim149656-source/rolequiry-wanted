@@ -4,7 +4,7 @@ import {
   claimStatus,
   deriveClaimKind,
   probePriority,
-  sourceOrganization,
+  caseOrganizationFor,
   tensionFor,
   unresolvednessFor,
 } from "./policy";
@@ -98,7 +98,12 @@ function deriveClaim(
 }
 
 export function deriveCase(roleCase: RoleCase): DerivedCase {
-  const caseOrganization = sourceOrganization(roleCase.sourceUrl);
+  const caseOrganization = caseOrganizationFor({
+    ...(roleCase.sourceUrl ? { sourceUrl: roleCase.sourceUrl } : {}),
+    ...(roleCase.jobPostingUrl ? { jobPostingUrl: roleCase.jobPostingUrl } : {}),
+    ...(roleCase.companyWebsite ? { companyWebsite: roleCase.companyWebsite } : {}),
+    ...(roleCase.employerDomain ? { employerDomain: roleCase.employerDomain } : {}),
+  });
   const claims = roleCase.claims.map((claim) =>
     deriveClaim(claim, caseOrganization),
   );
@@ -207,6 +212,9 @@ export function importRoleFromClaims(input: ImportedRoleInput): RoleCase {
     company: input.company.trim(),
     role: input.role.trim(),
     ...(input.sourceUrl ? { sourceUrl: input.sourceUrl } : {}),
+    ...(input.jobPostingUrl ? { jobPostingUrl: input.jobPostingUrl } : {}),
+    ...(input.companyWebsite ? { companyWebsite: input.companyWebsite } : {}),
+    ...(input.employerDomain ? { employerDomain: input.employerDomain } : {}),
     origin: CASE_ORIGIN.AGENT_IMPORTED,
     claims: input.claims.map((claim, index) => ({
       id: `imported-${index + 1}`,

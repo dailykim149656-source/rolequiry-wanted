@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>01 Paper Dossier</title>
+  <style>
+    :root { --canvas:#f7f7f5; --ink:#111; --muted:#767676; --line:#dededb; --soft:#f3f3f1; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:#d9d6cf; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); }
+    body { background:var(--canvas); }
+    .stage { width:100vw; height:100vh; margin:0; background:var(--canvas); overflow:hidden; }
+    .chrome { height:42px; display:flex; align-items:center; gap:8px; padding:0 16px; border-bottom:1px solid var(--line); background:#fff; }
+    .dot { width:10px; height:10px; border-radius:50%; background:#c8c8c3; }
+    .url { flex:1; height:24px; border-radius:6px; background:var(--soft); color:var(--muted); font-size:12px; display:flex; align-items:center; padding:0 10px; }
+    .page { padding:28px 72px 40px; }
+    .brand { display:flex; align-items:center; gap:10px; margin-bottom:36px; }
+    .mark { width:28px; height:28px; border-radius:8px; background:#181818; color:#fff; display:grid; place-items:center; font-size:14px; }
+    .brand b { font: 600 22px/1 ui-serif, Georgia, serif; }
+    h1 { font: 600 44px/1.15 ui-serif, Georgia, serif; margin:0 0 14px; max-width:18ch; }
+    h1 { font-size:40px; }
+    .sub { color:#4b4b4b; font-size:18px; max-width:36ch; margin:0 0 28px; }
+    .intake { display:flex; gap:10px; align-items:center; max-width:860px; }
+    input { flex:1; height:52px; border:1px solid var(--line); border-radius:14px; padding:0 16px; font-size:16px; background:#fff; }
+    .primary { height:52px; border:0; border-radius:14px; background:#181818; color:#fff; padding:0 20px; font-weight:600; }
+    .ghost { height:52px; border:0; background:transparent; color:#4b4b4b; font-weight:600; }
+    .cards { margin-top:56px; display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    .cards { margin-top:36px; }
+    article { background:#fff; border:1px solid var(--line); border-radius:18px; padding:20px; min-height:150px; }
+    .k { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+    article h2 { font: 600 20px/1.2 ui-serif, Georgia, serif; margin:8px 0 8px; }
+    article p { margin:0; color:#4b4b4b; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><div class="url">rolequiry.com</div></div>
+    <div class="page">
+      <div class="brand"><span class="mark">N</span><b>Rolequiry</b></div>
+      <h1>지원하기 전에, 공고부터 검증하세요.</h1>
+      <p class="sub">회사가 말하는 것과, 실제로 확인할 수 있는 것 사이의 간극을 찾습니다.</p>
+      <div class="intake">
+        <input placeholder="원티드 채용공고 URL을 붙여넣으세요" />
+        <button class="primary">공고 분석하기</button>
+        <button class="ghost">샘플로 먼저 보기</button>
+      </div>
+      <div class="cards">
+        <article><div class="k">Claims</div><h2>회사가 말하는 것</h2><p>공고 원문 quote만 구조화합니다. 없는 문장은 만들지 않습니다.</p></article>
+        <article><div class="k">Evidence</div><h2>웹에서 확인되는 것</h2><p>공식 자료와 공개정보로 지지, 반박, 근거 부족을 가릅니다.</p></article>
+        <article><div class="k">Questions</div><h2>면접에서 물어볼 것</h2><p>공개정보로 안 끝나는 불확실성만 질문으로 남깁니다.</p></article>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

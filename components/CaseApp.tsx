@@ -16,6 +16,8 @@ import {
   savePersistedCase,
 } from "@/lib/case-persistence";
 import { createCaseStore } from "@/lib/case-store";
+import type { FixtureId } from "@/lib/case-store";
+import { FIXTURES } from "@/lib/case-store";
 import { cannedInterviewAnswer } from "@/lib/demo/canned-answers";
 import { MAX_CASE_FILE_BYTES } from "@/lib/domain/limits";
 import { CASE_TOOL_CONTRACTS } from "@/lib/webmcp/contracts";
@@ -39,12 +41,43 @@ export function CaseApp() {
     store.getState,
   );
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sample = params.get("sample");
+    let seeded = false;
+    if (sample && sample in FIXTURES) {
+      store.loadFixture(sample as FixtureId);
+      seeded = true;
+    } else if (params.get("imported") === "1") {
+      try {
+        const raw = window.sessionStorage.getItem("rolequiry.import");
+        if (raw) {
+          const parsed = JSON.parse(raw) as {
+            company: string;
+            role: string;
+            sourceUrl?: string;
+            jobPostingUrl?: string;
+            companyWebsite?: string;
+            employerDomain?: string;
+            claims: Array<{
+              dimension: string;
+              employerStatement: string;
+              unresolvedVariable: string;
+              measurableForm: string;
+            }>;
+          };
+          store.importRole(parsed);
+          seeded = true;
+        }
+      } catch {
+        // Keep the default fixture if the intake payload is missing.
+      }
+    }
     const local = loadPersistedCase(window.localStorage);
     const legacyTabSession = local
       ? null
       : loadPersistedCase(window.sessionStorage);
     const saved = local ?? legacyTabSession;
-    if (saved) store.restore(saved);
+    if (saved && !seeded) store.restore(saved);
     const persist = () => {
       if (savePersistedCase(window.localStorage, store.getState())) {
         return true;
@@ -147,6 +180,52 @@ export function CaseApp() {
     }
   };
 
+  const investigate = async () => {
+    const current = store.getState();
+    if (!current.activeProbeId) {
+      store.selectDecisionChanger();
+    }
+    const next = store.getState();
+    const claim = next.derived.claims.find(
+      (item) => item.id === next.activeProbeId,
+    );
+    if (!claim) return;
+    const response = await fetch("/api/research", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        claimId: claim.id,
+        employerStatement: claim.employerStatement,
+        unresolvedVariable: claim.unresolvedVariable,
+        company: next.source.company,
+        role: next.source.role,
+        jobPostingUrl: next.source.jobPostingUrl ?? next.source.sourceUrl,
+        companyWebsite: next.source.companyWebsite,
+      }),
+    });
+    if (!response.ok) return;
+    const payload = (await response.json()) as {
+      claimId: string;
+      stance: "SUPPORTS" | "CHALLENGES" | "NEUTRAL";
+      text: string;
+      sourceKind: "EMPLOYER_OFFICIAL" | "FIRST_PERSON_EXPERIENCE";
+      sourceLabel: string;
+      sourceUrl: string;
+      verificationStatus: "VERIFIED" | "INSUFFICIENT" | "REJECTED";
+    };
+    store.recordVerifiedResearch(payload);
+  };
+
+  const shareCase = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCaseFileStatus({ error: false, message: "결과 링크를 복사했습니다." });
+    } catch {
+      setCaseFileStatus({ error: true, message: "링크를 복사하지 못했습니다." });
+    }
+  };
+
   return (
     <CaseWorkspace
       caseFileError={caseFileStatus?.error ?? false}
@@ -156,9 +235,10 @@ export function CaseApp() {
       onImportanceChange={store.setImportance}
       onImportCase={importCase}
       onLoadFixture={store.loadFixture}
-      onRank={store.selectDecisionChanger}
+      onRank={investigate}
       onRecordAnswer={canned ? () => store.recordAnswer(canned) : undefined}
       onReset={store.reset}
+      onShare={shareCase}
       snapshot={snapshot}
       webmcpCount={webmcpCount}
       webmcpDiagnostics={webmcpDiagnostics}

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>Rolequiry case</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root { --canvas:#f4f1ea; --ink:#14120f; --muted:#6b675f; --line:#d8d3c8; --paper:#fbfaf6; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin:0; background:var(--canvas); color:var(--ink); font:14px/1.45 "IBM Plex Sans KR", sans-serif; }
+    .page { min-height:100vh; padding:22px 40px 28px; display:grid; grid-template-rows:auto auto 1fr; gap:18px; }
+    header { display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--ink); padding-bottom:10px; }
+    .wordmark { font:600 16px/1 Newsreader, serif; }
+    .role { font:500 16px/1 Newsreader, serif; }
+    .meta { color:var(--muted); font-size:11px; letter-spacing:.1em; }
+    .stats { display:flex; gap:28px; color:var(--muted); font-size:12px; }
+    .stats b { color:var(--ink); font-weight:600; }
+    .grid { display:grid; grid-template-columns:1.15fr .85fr; gap:36px; min-height:0; }
+    h2 { margin:0 0 12px; font:500 13px/1 "IBM Plex Sans KR", sans-serif; letter-spacing:.12em; color:var(--muted); }
+    .claim { display:grid; grid-template-columns: 92px 1fr 72px; gap:12px; padding:12px 0; border-top:1px solid var(--line); }
+    .claim:last-child { border-bottom:1px solid var(--line); }
+    .claim q { font: italic 500 18px/1.3 Newsreader, serif; quotes: "“" "”"; }
+    .pri { font-size:11px; letter-spacing:.08em; }
+    .status { font-size:11px; color:var(--muted); }
+    .probe { border-left:1px solid var(--ink); padding:4px 0 0 24px; }
+    .probe h3 { font:500 34px/1.1 Newsreader, serif; margin:8px 0 12px; letter-spacing:-.03em; }
+    .probe p { margin:0 0 18px; color:#3f3c36; max-width:28em; }
+    button { border:0; background:var(--ink); color:var(--paper); height:40px; padding:0 16px; font:600 13px "IBM Plex Sans KR", sans-serif; }
+    .q { margin-top:28px; padding-top:16px; border-top:1px solid var(--line); }
+    .q p { font: italic 500 18px/1.35 Newsreader, serif; color:var(--ink); }
+    .ev { margin-top:10px; color:var(--muted); font-size:12px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="wordmark">Rolequiry</div>
+      <div class="role">Atlas · Forward Deployed Engineer</div>
+      <div class="meta">CASE 0041</div>
+    </header>
+    <div class="stats">
+      <div>확인됨 <b>1</b></div>
+      <div>긴장 <b>1</b></div>
+      <div>아직 모름 <b>2</b></div>
+      <div>다음 조사 <b>출장 몰림</b></div>
+    </div>
+    <div class="grid">
+      <section>
+        <h2>COMPANY SAID</h2>
+        <div class="claim"><div class="pri">CRITICAL</div><q>50% travel is expected.</q><div class="status">미확인</div></div>
+        <div class="claim"><div class="pri">HIGH</div><q>Own production systems end to end.</q><div class="status">긴장</div></div>
+        <div class="claim"><div class="pri">MEDIUM</div><q>Hybrid work with Seoul hub.</q><div class="status">확인</div></div>
+        <div class="claim"><div class="pri">MEDIUM</div><q>Hands-on coding remains a majority.</q><div class="status">미확인</div></div>
+      </section>
+      <aside class="probe">
+        <h2>NEXT BLOCKER</h2>
+        <h3>출장 몰림</h3>
+        <p>공고의 50%는 확인됐습니다. 실제 케이던스, 연속 출장, 런칭 주간 몰림은 공개 자료에 없습니다.</p>
+        <div class="ev">웹 · 근거 부족 &nbsp;|&nbsp; 공식 페이지 · 문장 일치</div>
+        <div style="margin-top:20px"><button>이 항목 조사하기</button></div>
+        <div class="q">
+          <h2>ASK NEXT</h2>
+          <p>최근 두 분기, FDE 출장 일수의 중앙값과 최댓값은 얼마였습니까?</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

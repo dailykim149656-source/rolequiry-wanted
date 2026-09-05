@@ -41,6 +41,14 @@ export const EVIDENCE_PROVENANCE = {
 export type EvidenceProvenance =
   (typeof EVIDENCE_PROVENANCE)[keyof typeof EVIDENCE_PROVENANCE];
 
+export const EVIDENCE_VERIFICATION = {
+  VERIFIED: "VERIFIED",
+  INSUFFICIENT: "INSUFFICIENT",
+  REJECTED: "REJECTED",
+} as const;
+export type EvidenceVerificationStatus =
+  (typeof EVIDENCE_VERIFICATION)[keyof typeof EVIDENCE_VERIFICATION];
+
 export const SPEAKER_ROLE = {
   RECRUITER: "RECRUITER",
   HIRING_MANAGER: "HIRING_MANAGER",
@@ -84,6 +92,7 @@ export type ResearchEvidenceInput = {
   readonly sourceKind: ResearchSourceKind;
   readonly sourceLabel: string;
   readonly sourceUrl: string;
+  readonly verificationStatus?: EvidenceVerificationStatus;
 };
 
 export type Evidence = {
@@ -97,6 +106,16 @@ export type Evidence = {
   readonly synthetic?: boolean;
   readonly sourceUrl?: string;
   readonly provenance?: EvidenceProvenance;
+  readonly verificationStatus?: EvidenceVerificationStatus;
+  readonly roleMatch?: boolean;
+  readonly locationMatch?: boolean;
+  readonly recency?: number;
+  readonly specificity?: number;
+  readonly clusterId?: string;
+  readonly publishedAt?: string;
+  readonly retrievedAt?: string;
+  readonly sourceTitle?: string;
+  readonly sourceCategory?: string;
 };
 
 export type SourceClaim = {
@@ -116,6 +135,9 @@ export type RoleCase = {
   readonly company: string;
   readonly role: string;
   readonly sourceUrl?: string;
+  readonly jobPostingUrl?: string;
+  readonly companyWebsite?: string;
+  readonly employerDomain?: string;
   readonly origin: CaseOrigin;
   readonly claims: readonly SourceClaim[];
 };
@@ -164,5 +186,8 @@ export type ImportedRoleInput = {
   readonly company: string;
   readonly role: string;
   readonly sourceUrl?: string;
+  readonly jobPostingUrl?: string;
+  readonly companyWebsite?: string;
+  readonly employerDomain?: string;
   readonly claims: readonly ImportedClaimInput[];
 };

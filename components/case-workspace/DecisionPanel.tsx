@@ -10,43 +10,69 @@ import {
 } from "@/lib/domain/policy";
 import { noProbeDetails } from "@/lib/domain/probe-outcome";
 import type { DerivedClaim } from "@/lib/domain/types";
+import { deriveDossier } from "@/lib/domain/dossier";
 import { Icon, type IconName } from "./Icon";
+import { useLocale } from "@/lib/i18n";
 
 export function DecisionPanel({
   snapshot,
   className = "",
+  onInvestigate,
 }: {
   readonly snapshot: CaseSnapshot;
   readonly className?: string;
+  readonly onInvestigate?: () => void;
 }) {
   const selected = snapshot.derived.claims.find(
     (claim) => claim.id === snapshot.activeProbeId,
   );
   const noProbe = noProbeDetails(snapshot.derived);
+  const question = selected?.measurableForm;
+  const { copy } = useLocale();
   return (
     <section
-      aria-labelledby="decision-path-title"
-      className={`surface-shadow rounded-[1.35rem] border border-line bg-surface p-4 lg:sticky lg:top-6 sm:p-5 ${className}`}
+      aria-label="Decision Path"
+      className={`rounded-[16px] border border-[#ececec] bg-white p-4 lg:sticky lg:top-6 sm:p-5 ${className}`}
     >
       <div className="flex items-start justify-between gap-3 border-b border-line pb-4">
         <div>
           <div className="flex items-center gap-2">
             <Icon className="size-5" name="path" />
             <h2 className="text-lg font-semibold" id="decision-path-title">
-              Decision Path
+              {copy.nextItem}
             </h2>
           </div>
           <p className="mt-1 text-sm text-muted">
             {decisionPathHint(
               snapshot.selectionState,
               snapshot.rankingVisible,
-            ) ?? "Why this is the question that matters next."}
+            ) ?? copy.nextHint}
           </p>
         </div>
-        <span className="shrink-0 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-semibold text-brand">
-          {selected ? "Active claim" : "Live case"}
-        </span>
       </div>
+      {onInvestigate ? (
+        <button
+          className="mt-4 h-12 w-full rounded-full bg-[#3366ff] text-base font-extrabold text-white"
+          onClick={onInvestigate}
+          type="button"
+        >
+          {copy.investigate}
+        </button>
+      ) : null}
+      {question ? (
+        <button
+          className="mt-2 h-10 w-full rounded-full border border-[#e1e2e4] bg-white text-sm font-bold"
+          onClick={() => void navigator.clipboard.writeText(question)}
+          type="button"
+        >
+          {copy.copyQuestion}
+        </button>
+      ) : null}
+      {question ? (
+        <p className="mt-4 border-t border-[#ececec] pt-3.5 text-[13px] text-[#333]">
+          {question}
+        </p>
+      ) : null}
 
       {snapshot.source.origin === "AGENT_IMPORTED" &&
       !snapshot.prioritiesTouched ? (
@@ -82,31 +108,29 @@ export function DecisionPanel({
 }
 
 function RankingDisclosure() {
+  const { copy } = useLocale();
   const percent = (value: number) => `${Math.round(value * 100)}%`;
   return (
     <details className="mt-5 border-t border-line pt-4 text-sm text-secondary">
       <summary className="min-h-11 cursor-pointer py-2 font-semibold text-ink outline-none focus-visible:ring-2 focus-visible:ring-brand/30">
-        How ranking works
+        {copy.rankingHow}
       </summary>
       <div className="space-y-2 pb-1 leading-6">
         <p>
-          Eligible unresolved claims are ranked by{" "}
-          {percent(PROBE_PRIORITY_WEIGHT.IMPORTANCE)} candidate priority,{" "}
-          {percent(PROBE_PRIORITY_WEIGHT.UNRESOLVEDNESS)} unresolvedness, and{" "}
-          {percent(PROBE_PRIORITY_WEIGHT.TENSION)} tension.
+          {copy.rankingWeights
+            .replace("{importance}", percent(PROBE_PRIORITY_WEIGHT.IMPORTANCE))
+            .replace("{unresolved}", percent(PROBE_PRIORITY_WEIGHT.UNRESOLVEDNESS))
+            .replace("{tension}", percent(PROBE_PRIORITY_WEIGHT.TENSION))}
         </p>
-        <p>Ties use stable dimension text, then claim ID.</p>
+        <p>{copy.rankingTies}</p>
         <p>
-          For lived experience, evidence coverage weights employer claims at
-          {` ${percent(LIVED_EXPERIENCE_WEIGHT.EMPLOYER_STATED)}`}, public
-          reports at up to{" "}
-          {percent(LIVED_EXPERIENCE_WEIGHT.REPORTED_EXPERIENCE)}, and a
-          resolving interview answer at{" "}
-          {percent(LIVED_EXPERIENCE_WEIGHT.CANDIDATE_SPECIFIC_ANSWER)}.
+          {copy.rankingLived
+            .replace("{employer}", percent(LIVED_EXPERIENCE_WEIGHT.EMPLOYER_STATED))
+            .replace("{public}", percent(LIVED_EXPERIENCE_WEIGHT.REPORTED_EXPERIENCE))
+            .replace("{interview}", percent(LIVED_EXPERIENCE_WEIGHT.CANDIDATE_SPECIFIC_ANSWER))}
         </p>
         <p>
-          This is a transparent heuristic, not a predictive fit score or an
-          empirically calibrated outcome model.
+          {copy.rankingHeuristic}
         </p>
       </div>
     </details>
@@ -114,11 +138,12 @@ function RankingDisclosure() {
 }
 
 function PrioritiesRequired() {
+  const { copy } = useLocale();
   const steps = [
-    ["briefcase", "Import job"],
-    ["flag", "Set priorities"],
-    ["spark", "Choose next"],
-    ["message", "Ask next"],
+    ["briefcase", copy.importJob],
+    ["flag", copy.setPriorities],
+    ["spark", copy.chooseNext],
+    ["message", copy.askNext],
   ] as const satisfies ReadonlyArray<readonly [IconName, string]>;
   return (
     <div className="mt-4" data-testid="priorities-required">
@@ -129,11 +154,10 @@ function PrioritiesRequired() {
           </span>
           <div>
             <h3 className="text-lg font-semibold">
-              Your judgment activates the ranking
+              {copy.judgmentTitle}
             </h3>
             <p className="mt-1 text-sm leading-6 text-secondary">
-              Unprioritized claims stay outside the decision. Choose only what
-              could materially change your view of the role.
+              {copy.judgmentBody}
             </p>
           </div>
         </div>
@@ -157,7 +181,7 @@ function PrioritiesRequired() {
         className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         href="#claim-board"
       >
-        Set your priorities
+        {copy.setPrioritiesCta}
         <Icon className="size-4" name="arrow" />
       </a>
     </div>

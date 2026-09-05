@@ -118,6 +118,32 @@ export function sourceOrganization(url?: string): string {
   }
 }
 
+const ATS_HOSTS = new Set([
+  "wanted.co.kr",
+  "www.wanted.co.kr",
+  "linkedin.com",
+  "www.linkedin.com",
+  "greenhouse.io",
+  "boards.greenhouse.io",
+  "lever.co",
+  "jobs.lever.co",
+]);
+
+export function caseOrganizationFor(input: {
+  readonly sourceUrl?: string;
+  readonly jobPostingUrl?: string;
+  readonly companyWebsite?: string;
+  readonly employerDomain?: string;
+}): string {
+  if (input.employerDomain?.trim()) {
+    return input.employerDomain.trim().toLowerCase().replace(/^www\./, "");
+  }
+  if (input.companyWebsite) return sourceOrganization(input.companyWebsite);
+  const posting = sourceOrganization(input.jobPostingUrl || input.sourceUrl);
+  if (ATS_HOSTS.has(posting) || posting.endsWith(".wanted.co.kr")) return "";
+  return posting;
+}
+
 // App-owned check on an agent-declared employer source: does its organization
 // match the job posting's organization? Null when the check does not apply
 // (non-employer evidence) or cannot run (missing URLs). This verifies domain
@@ -145,6 +171,12 @@ export function authorityEvidence(
   caseOrganization: string,
 ): readonly Evidence[] {
   return evidence.filter((item) => {
+    if (
+      item.verificationStatus === "INSUFFICIENT" ||
+      item.verificationStatus === "REJECTED"
+    ) {
+      return false;
+    }
     const provenance = item.provenance ?? EVIDENCE_PROVENANCE.CASE_INPUT;
     const agentDeclaredEmployer =
       provenance === EVIDENCE_PROVENANCE.AGENT_REPORTED &&

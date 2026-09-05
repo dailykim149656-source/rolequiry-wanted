@@ -10,7 +10,8 @@
     "format": "biome format --write",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "eval": "vitest run tests/eval-harness.test.ts"
   },
   "dependencies": {
     "next": "16.3.3",

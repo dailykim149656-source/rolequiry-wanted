@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>02 Split Truth</title>
+  <style>
+    * { box-sizing:border-box; }
+    body { margin:0; background:#cfcbc3; font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#111; }
+    body { background:#f7f7f5; }
+    .stage { width:100vw; height:100vh; margin:0; background:#f7f7f5; overflow:hidden; }
+    header { display:flex; justify-content:space-between; align-items:center; padding:18px 28px; border-bottom:1px solid #dededb; }
+    .brand { font:600 20px ui-serif,Georgia,serif; }
+    .grid { display:grid; grid-template-columns:1fr 1fr 320px; height:calc(900px - 61px); }
+    .grid { height:calc(100vh - 61px); }
+    section { padding:24px; border-right:1px solid #dededb; overflow:hidden; }
+    h2 { margin:0 0 16px; font:600 22px ui-serif,Georgia,serif; }
+    .claim, .ev { background:#fff; border:1px solid #dededb; border-radius:14px; padding:14px; margin-bottom:10px; }
+    .quote { font:600 15px/1.4 ui-serif,Georgia,serif; }
+    .meta { color:#767676; font-size:12px; margin-top:6px; }
+    .chip { display:inline-block; font-size:11px; font-weight:600; padding:3px 8px; border-radius:999px; background:#efefec; }
+    .chip.c { background:#111; color:#fff; }
+    .chip.h { background:#111; color:#fff; opacity:.75; }
+    .ok { background:#e5f5ed; color:#157451; }
+    .bad { background:#fdebed; color:#c23c4c; }
+    .na { background:#eef0f4; color:#667085; }
+    .side { background:#fff; padding:24px; }
+    .cta { width:100%; height:48px; border:0; border-radius:12px; background:#181818; color:#fff; font-weight:700; margin-top:16px; }
+    .q { background:#f3f3f1; border-radius:12px; padding:12px; margin-top:12px; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <header><div class="brand">Rolequiry</div><div class="meta">Atlas · Forward Deployed Engineer</div></header>
+    <div class="grid">
+      <section>
+        <h2>회사가 말하는 것</h2>
+        <div class="claim"><div class="quote">“50% travel is expected.”</div><div class="meta"><span class="chip c">Critical</span> 출장 비중</div></div>
+        <div class="claim"><div class="quote">“You will own production systems end to end.”</div><div class="meta"><span class="chip h">High</span> 기술 권한</div></div>
+        <div class="claim"><div class="quote">“Hybrid work with Seoul hub.”</div><div class="meta"><span class="chip">Medium</span> 근무지</div></div>
+        <div class="claim"><div class="quote">“Hands-on coding remains a majority of the role.”</div><div class="meta"><span class="chip">Medium</span> 코딩 비중</div></div>
+      </section>
+      <section>
+        <h2>웹에서 확인되는 것</h2>
+        <div class="ev"><span class="chip ok">지지</span><div class="quote" style="margin-top:8px">공식 채용 페이지에 동일 출장 문장.</div><div class="meta">careers.example.com/fde</div></div>
+        <div class="ev"><span class="chip bad">반박</span><div class="quote" style="margin-top:8px">최근 팀 발표는 런칭 주간에 연속 출장을 암시.</div><div class="meta">engineering blog · 2026-04</div></div>
+        <div class="ev"><span class="chip na">근거 부족</span><div class="quote" style="margin-top:8px">실제 주간 출장 일수는 공개 자료에 없음.</div><div class="meta">verifier · INSUFFICIENT</div></div>
+      </section>
+      <aside class="side">
+        <div class="meta">다음 decision blocker</div>
+        <h2>출장 몰림</h2>
+        <p>공고 비율은 확인됨. 실제 케이던스는 아직 모름.</p>
+        <button class="cta">이 항목 조사하기</button>
+        <div class="q"><b>그래도 확인되지 않아 면접에서 물어볼 것</b><p>최근 두 분기 FDE 출장 일수의 중앙값과 최댓값은 얼마인가?</p></div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

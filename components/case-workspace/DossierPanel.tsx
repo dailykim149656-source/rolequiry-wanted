@@ -7,21 +7,7 @@ import {
 } from "@/lib/domain/dossier";
 import type { SpeakerRole } from "@/lib/domain/types";
 import { Icon } from "./Icon";
-
-const SPEAKER_LABEL: Record<SpeakerRole, string> = {
-  RECRUITER: "recruiter",
-  HIRING_MANAGER: "hiring manager",
-  TEAM_MEMBER: "team member",
-  OTHER: "interviewer",
-};
-
-const RESOLUTION_LABEL: Record<DossierResolution, string> = {
-  SUFFICIENTLY_RESOLVED: "Sufficiently resolved",
-  CONTRADICTED: "Contradicted — weigh explicitly",
-  AWAITING_PRIORITY: "Awaiting your priority",
-  ASK_IN_INTERVIEW: "Ask in interview",
-};
-
+import { useLocale } from "@/lib/i18n";
 const RESOLUTION_TONE: Record<DossierResolution, string> = {
   SUFFICIENTLY_RESOLVED: "text-supported",
   CONTRADICTED: "text-challenged",
@@ -33,7 +19,7 @@ function interviewPackText(dossier: DecisionDossier): string {
   return dossier.interviewPack
     .map(
       (question, index) =>
-        `${index + 1}. Ask the ${SPEAKER_LABEL[question.askWho]}: ${question.question}`,
+        `${index + 1}. ${question.askWho}: ${question.question}`,
     )
     .join("\n");
 }
@@ -46,6 +32,19 @@ export function DossierPanel({
   readonly className?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const { copy } = useLocale();
+  const speakerLabel = {
+    RECRUITER: copy.recruiter,
+    HIRING_MANAGER: copy.hiringManager,
+    TEAM_MEMBER: copy.teamMember,
+    OTHER: copy.interviewer,
+  };
+  const resolutionLabel = {
+    SUFFICIENTLY_RESOLVED: copy.resolved,
+    CONTRADICTED: copy.contradicted,
+    AWAITING_PRIORITY: copy.awaitingPriority,
+    ASK_IN_INTERVIEW: copy.askInInterview,
+  };
   const locked =
     snapshot.source.origin === "AGENT_IMPORTED" && !snapshot.prioritiesTouched;
   const dossier = locked ? null : deriveDossier(snapshot.derived);
@@ -71,11 +70,12 @@ export function DossierPanel({
           <div className="flex items-center gap-2">
             <Icon className="size-5" name="flag" />
             <h2 className="text-lg font-semibold" id="dossier-panel-title">
-              Due diligence dossier
+              {copy.evidence}
             </h2>
+            <span className="sr-only">Due diligence dossier</span>
           </div>
           <p className="mt-1 text-sm text-muted">
-            What is settled, what is still open, and what to ask next.
+            {copy.dossierSettled}
           </p>
         </div>
         {dossier ? (
@@ -96,8 +96,7 @@ export function DossierPanel({
 
       {!dossier ? (
         <p className="mt-4 rounded-2xl border border-line bg-quiet px-4 py-3 text-sm leading-6 text-secondary">
-          Confirm your priorities first. The dossier rolls up only claims you
-          have judged.
+          {copy.confirmPriorities}
         </p>
       ) : (
         <div className="mt-4 grid items-start gap-5 lg:grid-cols-2">
@@ -119,7 +118,7 @@ export function DossierPanel({
                       <span
                         className={`text-xs font-semibold ${RESOLUTION_TONE[entry.resolution]}`}
                       >
-                        {RESOLUTION_LABEL[entry.resolution]}
+                        {resolutionLabel[entry.resolution]}
                       </span>
                     </li>
                   ))}
@@ -130,7 +129,7 @@ export function DossierPanel({
           <div data-testid="interview-pack">
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-                What to ask next
+                {copy.whatToAsk}
               </p>
               {dossier.interviewPack.length > 0 ? (
                 <button
@@ -138,7 +137,7 @@ export function DossierPanel({
                   onClick={copyPack}
                   type="button"
                 >
-                  {copied ? "Copied" : "Copy questions"}
+                  {copied ? copy.copied : copy.copyQuestions}
                 </button>
               ) : null}
             </div>
@@ -155,7 +154,7 @@ export function DossierPanel({
                     key={question.claimId}
                   >
                     <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand">
-                      Ask the {SPEAKER_LABEL[question.askWho]}
+                      {copy.askThe} {speakerLabel[question.askWho]}
                     </p>
                     <p className="mt-1 text-sm font-semibold leading-6 text-ink">
                       {question.question}
