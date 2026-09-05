@@ -407,4 +407,23 @@ describe("case workspace status", () => {
       }).className,
     ).toContain("bg-unverified-soft");
   });
+  it("shows INSUFFICIENT evidence as gray insufficient, not green Supports", () => {
+    const store = createImportedStore();
+    store.setPriorities([{ claimId: "imported-1", importance: "CRITICAL" }]);
+    store.recordVerifiedResearch({
+      claimId: "imported-1",
+      stance: "SUPPORTS",
+      text: "A page repeats the posting but does not settle ownership.",
+      sourceKind: "FIRST_PERSON_EXPERIENCE",
+      sourceLabel: "Unsettled blog",
+      sourceUrl: "https://blog.example.com/ownership",
+      verificationStatus: "INSUFFICIENT",
+    });
+    renderWorkspace(store);
+    const claim = within(screen.getByTestId("claim-imported-1"));
+    fireEvent.click(claim.getByText(/View evidence/i));
+    const badge = claim.getByText("Insufficient evidence");
+    expect(badge.className).toContain("bg-unverified-soft");
+    expect(badge.className).not.toContain("bg-supported-soft");
+  });
 });

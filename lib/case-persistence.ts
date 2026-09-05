@@ -56,6 +56,8 @@ const evidenceSchema = z
     synthetic: z.boolean().optional(),
     sourceUrl: httpUrl.optional(),
     provenance: z.enum(EVIDENCE_PROVENANCE).optional(),
+    sourceCategory: z.string().optional(),
+    verificationStatus: z.enum(["VERIFIED", "INSUFFICIENT", "REJECTED"]).optional(),
   })
   .superRefine((evidence, context) => {
     if (evidence.provenance === EVIDENCE_PROVENANCE.AGENT_REPORTED) {

@@ -11,17 +11,26 @@ import { useLocale } from "@/lib/i18n";
 
 type EvidenceTone = "challenged" | "empty" | "mixed" | "neutral" | "supported";
 
+function countedEvidence(items: readonly Evidence[]): readonly Evidence[] {
+  return items.filter(
+    (item) =>
+      item.verificationStatus !== "INSUFFICIENT" &&
+      item.verificationStatus !== "REJECTED",
+  );
+}
+
 function evidenceTone(items: readonly Evidence[]): EvidenceTone {
-  const supports = items.some(
+  const visible = countedEvidence(items);
+  const supports = visible.some(
     (item) => item.stance === EVIDENCE_STANCE.SUPPORTS,
   );
-  const challenges = items.some(
+  const challenges = visible.some(
     (item) => item.stance === EVIDENCE_STANCE.CHALLENGES,
   );
   if (supports && challenges) return "mixed";
   if (supports) return "supported";
   if (challenges) return "challenged";
-  if (items.length > 0) return "neutral";
+  if (visible.length > 0 || items.length > 0) return "neutral";
   return "empty";
 }
 
@@ -147,7 +156,7 @@ export function EvidenceList({
                 </span>
               </div>
               <ul className="divide-y divide-line">
-                {items.map((item) => (
+                {items.filter((item) => item.verificationStatus !== "REJECTED").map((item) => (
                   <EvidenceRow
                     caseOrganization={caseOrganization}
                     item={item}
@@ -170,6 +179,7 @@ function EvidenceRow({
   readonly item: Evidence;
   readonly caseOrganization: string;
 }) {
+  const { copy } = useLocale();
   const sourceUrl = safeHttpUrl(item.sourceUrl);
   const synthetic =
     item.synthetic || item.text.toLowerCase().includes("synthetic");
@@ -189,9 +199,9 @@ function EvidenceRow({
       <div className="flex flex-wrap items-center gap-2">
         <p className="font-semibold text-ink">{source}</p>
         <span
-          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${stanceClass(item.stance)}`}
+          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${evidenceBadgeClass(item)}`}
         >
-          {stanceLabel(item.stance)}
+          {evidenceBadgeLabel(item, copy)}
         </span>
         {synthetic ? (
           <span className="text-xs font-medium text-muted">Synthetic</span>
@@ -258,15 +268,20 @@ function titleCase(value: string): string {
     .join(" ");
 }
 
-function stanceLabel(stance: Evidence["stance"]): string {
-  if (stance === "SUPPORTS") return "Supports";
-  if (stance === "CHALLENGES") return "Challenges";
-  return "Neutral";
+function evidenceBadgeLabel(item: Evidence, copy: { insufficientEvidence: string; rejectedEvidence: string; supportsEvidence: string; challengesEvidence: string; unverified: string }): string {
+  if (item.verificationStatus === "INSUFFICIENT") return copy.insufficientEvidence;
+  if (item.verificationStatus === "REJECTED") return copy.rejectedEvidence;
+  if (item.stance === "SUPPORTS") return copy.supportsEvidence;
+  if (item.stance === "CHALLENGES") return copy.challengesEvidence;
+  return copy.unverified;
 }
 
-function stanceClass(stance: Evidence["stance"]): string {
-  if (stance === "SUPPORTS") return "bg-supported-soft text-supported";
-  if (stance === "CHALLENGES") return "bg-challenged-soft text-challenged";
+function evidenceBadgeClass(item: Evidence): string {
+  if (item.verificationStatus === "INSUFFICIENT" || item.verificationStatus === "REJECTED") {
+    return "bg-unverified-soft text-unverified";
+  }
+  if (item.stance === "SUPPORTS") return "bg-supported-soft text-supported";
+  if (item.stance === "CHALLENGES") return "bg-challenged-soft text-challenged";
   return "bg-unverified-soft text-unverified";
 }
 

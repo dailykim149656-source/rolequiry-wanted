@@ -60,7 +60,7 @@ const researchSchema = {
     },
     sourceKind: {
       type: "string",
-      enum: ["EMPLOYER_OFFICIAL", "FIRST_PERSON_EXPERIENCE"],
+      enum: ["EMPLOYER_OFFICIAL", "FIRST_PERSON_EXPERIENCE", "OTHER_PUBLIC"],
     },
   },
   required: ["stance", "summary", "sourceUrl", "sourceLabel", "sourceKind"],
@@ -229,7 +229,7 @@ export function useCaseWebMCPTools(store: CaseStore) {
       summary: string;
       sourceUrl: string;
       sourceLabel: string;
-      sourceKind: "EMPLOYER_OFFICIAL" | "FIRST_PERSON_EXPERIENCE";
+      sourceKind: "EMPLOYER_OFFICIAL" | "FIRST_PERSON_EXPERIENCE" | "OTHER_PUBLIC";
     }) => recordResearchEvidenceTool(store, args),
   });
   const priorities = useWebMCP({

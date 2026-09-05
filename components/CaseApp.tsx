@@ -218,33 +218,72 @@ export function CaseApp() {
         claimId?: string;
         stance?: "SUPPORTS" | "CHALLENGES" | "NEUTRAL";
         text?: string;
-        sourceKind?: "EMPLOYER_OFFICIAL" | "FIRST_PERSON_EXPERIENCE";
+        sourceKind?: "EMPLOYER_OFFICIAL" | "FIRST_PERSON_EXPERIENCE" | "OTHER_PUBLIC";
         sourceLabel?: string;
         sourceUrl?: string;
         verificationStatus?: "VERIFIED" | "INSUFFICIENT" | "REJECTED";
+        items?: Array<{
+          stance?: "SUPPORTS" | "CHALLENGES" | "NEUTRAL";
+          text?: string;
+          sourceKind?: "EMPLOYER_OFFICIAL" | "FIRST_PERSON_EXPERIENCE" | "OTHER_PUBLIC";
+          sourceLabel?: string;
+          sourceUrl?: string;
+          verificationStatus?: "VERIFIED" | "INSUFFICIENT" | "REJECTED";
+        }>;
       };
-      if (!response.ok || !payload.claimId || !payload.sourceUrl || !payload.text || !payload.sourceKind || !payload.sourceLabel || !payload.stance || !payload.verificationStatus) {
+      type ResearchItem = {
+        stance: "SUPPORTS" | "CHALLENGES" | "NEUTRAL";
+        text: string;
+        sourceKind: "EMPLOYER_OFFICIAL" | "FIRST_PERSON_EXPERIENCE" | "OTHER_PUBLIC";
+        sourceLabel: string;
+        sourceUrl: string;
+        verificationStatus: "VERIFIED" | "INSUFFICIENT" | "REJECTED";
+      };
+      const recorded: ResearchItem[] = [];
+      for (const item of payload.items?.length ? payload.items : [payload]) {
+        if (
+          !item.sourceUrl ||
+          !item.text ||
+          !item.sourceKind ||
+          !item.sourceLabel ||
+          !item.stance ||
+          !item.verificationStatus
+        ) {
+          continue;
+        }
+        recorded.push({
+          stance: item.stance,
+          text: item.text,
+          sourceKind: item.sourceKind,
+          sourceLabel: item.sourceLabel,
+          sourceUrl: item.sourceUrl,
+          verificationStatus: item.verificationStatus,
+        });
+      }
+      if (!response.ok || !payload.claimId || recorded.length === 0) {
         setCaseFileStatus({
           error: true,
           message: payload.error ?? "공개된 정보에서 이 항목을 아직 확인하지 못했습니다.",
         });
         return;
       }
-      store.recordVerifiedResearch({
-        claimId: payload.claimId,
-        stance: payload.stance,
-        text: payload.text,
-        sourceKind: payload.sourceKind,
-        sourceLabel: payload.sourceLabel,
-        sourceUrl: payload.sourceUrl,
-        verificationStatus: payload.verificationStatus,
-      });
+      for (const item of recorded) {
+        store.recordVerifiedResearch({
+          claimId: payload.claimId,
+          stance: item.stance,
+          text: item.text,
+          sourceKind: item.sourceKind,
+          sourceLabel: item.sourceLabel,
+          sourceUrl: item.sourceUrl,
+          verificationStatus: item.verificationStatus,
+        });
+      }
+      const insufficientOnly = recorded.every((item) => item.verificationStatus === "INSUFFICIENT");
       setCaseFileStatus({
         error: false,
-        message:
-          payload.verificationStatus === "INSUFFICIENT"
-            ? "공개된 정보만으로는 아직 모릅니다. 근거는 남겨 뒀습니다."
-            : "찾은 근거를 이 항목에 붙였습니다.",
+        message: insufficientOnly
+          ? "공개된 정보만으로는 아직 모릅니다. 근거는 남겨 뒀습니다."
+          : "찾은 근거를 이 항목에 붙였습니다.",
       });
     } catch {
       setCaseFileStatus({

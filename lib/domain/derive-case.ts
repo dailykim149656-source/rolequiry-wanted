@@ -199,6 +199,7 @@ export function recordResearchEvidence(
             sourceUrl: input.sourceUrl,
             synthetic: false,
             provenance: EVIDENCE_PROVENANCE.AGENT_REPORTED,
+            sourceCategory: input.sourceKind,
           },
         ],
       };

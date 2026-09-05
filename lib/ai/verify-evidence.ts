@@ -1,5 +1,6 @@
 import type { EvidenceStance, EvidenceVerificationStatus } from "@/lib/domain/types";
 import { chatJson } from "@/lib/ai/client";
+import { hostedAiConfig } from "@/lib/ai/env";
 
 export type VerifyEvidenceInput = {
   readonly employerStatement: string;
@@ -42,34 +43,59 @@ export function verifyEvidence(input: VerifyEvidenceInput): VerifyEvidenceResult
   };
 }
 
-export async function verifyEvidenceWithEscalation(
-  input: VerifyEvidenceInput & {
-    readonly escalate?: boolean;
-    readonly escalationModel?: string;
-  },
-) {
-  const first = verifyEvidence(input);
-  if (first.verificationStatus !== "INSUFFICIENT" || !input.escalate) {
-    return { ...first, escalated: false, model: "gpt-5.6-luna" };
-  }
+async function modelVerdict(
+  input: VerifyEvidenceInput,
+  model: string,
+): Promise<VerifyEvidenceResult | null> {
   const proposed = await chatJson<{
     stance?: EvidenceStance;
     verificationStatus?: EvidenceVerificationStatus;
   }>({
-    model: input.escalationModel ?? "gpt-5.6-terra",
+    model,
     system:
       "Return JSON {stance, verificationStatus} for one claim and one source. Prefer INSUFFICIENT when the source does not settle the claim.",
     user: JSON.stringify(input),
   });
-  const second = proposed?.verificationStatus
-    ? {
-        stance: proposed.stance ?? "NEUTRAL",
-        verificationStatus: proposed.verificationStatus,
-      }
-    : first;
+  if (!proposed?.verificationStatus) return null;
   return {
-    ...second,
-    escalated: true,
-    model: input.escalationModel ?? "gpt-5.6-terra",
+    stance: proposed.stance ?? "NEUTRAL",
+    verificationStatus: proposed.verificationStatus,
   };
+}
+
+export async function verifyEvidenceWithLuna(input: VerifyEvidenceInput) {
+  const config = hostedAiConfig();
+  const model = config.verifierModel || "gpt-5.6-luna";
+  const lexical = verifyEvidence(input);
+  if (lexical.verificationStatus === "INSUFFICIENT" && lexical.stance === "NEUTRAL") {
+    return { ...lexical, escalated: false, model };
+  }
+  const luna = await modelVerdict(input, model);
+  return {
+    ...(luna ?? lexical),
+    escalated: false,
+    model,
+  };
+}
+
+export async function verifyEvidenceWithEscalation(
+  input: VerifyEvidenceInput & {
+    readonly escalate?: boolean;
+    readonly verifierModel?: string;
+    readonly escalationModel?: string;
+  },
+) {
+  const config = hostedAiConfig();
+  const verifierModel = input.verifierModel ?? config.verifierModel ?? "gpt-5.6-luna";
+  const escalationModel = input.escalationModel ?? config.escalationModel ?? "gpt-5.6-terra";
+  const lexical = verifyEvidence(input);
+  if (lexical.verificationStatus === "INSUFFICIENT" && lexical.stance === "NEUTRAL") {
+    return { ...lexical, escalated: false, model: verifierModel };
+  }
+  const luna = (await modelVerdict(input, verifierModel)) ?? lexical;
+  if (!input.escalate || luna.verificationStatus !== "INSUFFICIENT") {
+    return { ...luna, escalated: false, model: verifierModel };
+  }
+  const terra = (await modelVerdict(input, escalationModel)) ?? luna;
+  return { ...terra, escalated: true, model: escalationModel };
 }

@@ -1,7 +1,23 @@
 import { NextResponse } from "next/server";
 import { hostedAiConfig } from "@/lib/ai/env";
-import { researchClaim } from "@/lib/ai/research-claim";
+import { researchClaim, type ResearchCandidate } from "@/lib/ai/research-claim";
 import { verifyEvidenceWithEscalation } from "@/lib/ai/verify-evidence";
+
+function rank(item: ResearchCandidate): number {
+  if (item.verificationStatus === "VERIFIED") return 2;
+  if (item.verificationStatus === "INSUFFICIENT") return 1;
+  return 0;
+}
+
+function bestOf(
+  items: readonly ResearchCandidate[],
+  stance: "SUPPORTS" | "CHALLENGES",
+): ResearchCandidate | undefined {
+  return items
+    .filter((item) => item.stance === stance)
+    .slice()
+    .sort((left, right) => rank(right) - rank(left))[0];
+}
 
 export async function POST(request: Request) {
   const body = (await request.json()) as {
@@ -25,32 +41,50 @@ export async function POST(request: Request) {
     ...(body.jobPostingUrl ? { jobPostingUrl: body.jobPostingUrl } : {}),
     ...(body.companyWebsite ? { companyWebsite: body.companyWebsite } : {}),
   });
-  const chosen =
-    researched.candidates.find((item) => item.verificationStatus === "VERIFIED") ??
-    researched.candidates[0];
-  if (!chosen) {
+  const chosen = [
+    bestOf(researched.candidates, "SUPPORTS"),
+    bestOf(researched.candidates, "CHALLENGES"),
+  ].filter((item): item is ResearchCandidate => Boolean(item));
+  const fallback = chosen.length > 0 ? chosen : researched.candidates.slice(0, 1);
+  if (fallback.length === 0) {
     return NextResponse.json({ error: "no evidence" }, { status: 422 });
   }
-  const escalated =
-    chosen.verificationStatus === "INSUFFICIENT"
-      ? await verifyEvidenceWithEscalation({
-          employerStatement: body.employerStatement ?? "",
-          evidenceText: chosen.text,
-          sourceUrl: chosen.sourceUrl,
-          escalate: true,
-          escalationModel: config.escalationModel,
-        })
-      : { ...chosen, escalated: false, model: config.verifierModel };
+  const items = [];
+  for (const candidate of fallback) {
+    const escalated =
+      candidate.verificationStatus === "INSUFFICIENT"
+        ? await verifyEvidenceWithEscalation({
+            employerStatement: body.employerStatement ?? "",
+            evidenceText: candidate.text,
+            sourceUrl: candidate.sourceUrl,
+            escalate: true,
+            verifierModel: config.verifierModel,
+            escalationModel: config.escalationModel,
+          })
+        : { ...candidate, escalated: false, model: config.verifierModel };
+    items.push({
+      stance: escalated.stance,
+      text: candidate.text,
+      sourceKind: candidate.sourceKind,
+      sourceLabel: candidate.sourceLabel,
+      sourceUrl: candidate.sourceUrl,
+      verificationStatus: escalated.verificationStatus,
+      model: escalated.model,
+      escalated: escalated.escalated,
+    });
+  }
+  const first = items[0];
   return NextResponse.json({
     claimId: body.claimId,
-    stance: escalated.stance,
-    text: chosen.text,
-    sourceKind: chosen.sourceKind,
-    sourceLabel: chosen.sourceLabel,
-    sourceUrl: chosen.sourceUrl,
-    verificationStatus: escalated.verificationStatus,
+    stance: first?.stance,
+    text: first?.text,
+    sourceKind: first?.sourceKind,
+    sourceLabel: first?.sourceLabel,
+    sourceUrl: first?.sourceUrl,
+    verificationStatus: first?.verificationStatus,
+    items,
     counterevidenceAttempted: researched.counterevidenceAttempted,
-    model: escalated.model,
-    escalated: escalated.escalated,
+    model: first?.model,
+    escalated: first?.escalated,
   });
 }

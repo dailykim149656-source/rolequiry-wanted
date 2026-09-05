@@ -81,6 +81,7 @@ export type SourceKind = (typeof SOURCE_KIND)[keyof typeof SOURCE_KIND];
 export const RESEARCH_SOURCE_KIND = {
   EMPLOYER_OFFICIAL: "EMPLOYER_OFFICIAL",
   FIRST_PERSON_EXPERIENCE: "FIRST_PERSON_EXPERIENCE",
+  OTHER_PUBLIC: "OTHER_PUBLIC",
 } as const;
 export type ResearchSourceKind =
   (typeof RESEARCH_SOURCE_KIND)[keyof typeof RESEARCH_SOURCE_KIND];

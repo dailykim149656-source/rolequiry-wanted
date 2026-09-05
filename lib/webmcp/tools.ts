@@ -201,7 +201,8 @@ export function recordResearchEvidenceTool(
   }
   if (
     input.sourceKind !== RESEARCH_SOURCE_KIND.EMPLOYER_OFFICIAL &&
-    input.sourceKind !== RESEARCH_SOURCE_KIND.FIRST_PERSON_EXPERIENCE
+    input.sourceKind !== RESEARCH_SOURCE_KIND.FIRST_PERSON_EXPERIENCE &&
+    input.sourceKind !== RESEARCH_SOURCE_KIND.OTHER_PUBLIC
   ) {
     throw new Error("Unsupported research source");
   }

@@ -58,4 +58,21 @@ describe("recordVerifiedResearchEvidence", () => {
     expect(after).toBeDefined();
     expect(after?.tension ?? 0).toBeGreaterThan(before?.tension ?? 0);
   });
+
+  it("does not let OTHER_PUBLIC research change coverage even when VERIFIED", () => {
+    const before = deriveCase(importedCase()).claims[0];
+    expect(before).toBeDefined();
+    const next = recordVerifiedResearchEvidence(importedCase(), {
+      claimId: "imported-1",
+      stance: "CHALLENGES",
+      text: "A news brief mentions travel.",
+      sourceKind: "OTHER_PUBLIC",
+      sourceLabel: "News brief",
+      sourceUrl: "https://news.example.com/travel",
+      verificationStatus: "VERIFIED",
+    });
+    const after = deriveCase(next).claims[0];
+    expect(after?.unresolvedness).toBe(before?.unresolvedness);
+    expect(after?.tension).toBe(before?.tension);
+  });
 });

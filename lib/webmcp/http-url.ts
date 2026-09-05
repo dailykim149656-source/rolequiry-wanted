@@ -47,3 +47,36 @@ export function normalizeHttpUrl(value: string, label: string): string {
   parsed.hash = "";
   return parsed.toString();
 }
+
+export async function fetchPublicText(url: string, limit = 4000): Promise<string> {
+  let normalized: string;
+  try {
+    normalized = normalizeHttpUrl(url, "source URL");
+  } catch {
+    return "";
+  }
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2500);
+    const response = await fetch(normalized, {
+      headers: { accept: "text/html,text/plain" },
+      redirect: "follow",
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!response.ok) return "";
+    const type = response.headers.get("content-type") ?? "";
+    if (type && !/text\/html|text\/plain|application\/xhtml/i.test(type)) {
+      return "";
+    }
+    return (await response.text())
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, limit);
+  } catch {
+    return "";
+  }
+}

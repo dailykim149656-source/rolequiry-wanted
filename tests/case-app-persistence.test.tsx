@@ -282,4 +282,54 @@ describe("CaseApp persistence", () => {
     ]);
     expect(await screen.findAllByText("Case JSON exported locally.")).toBeTruthy();
   });
+  it("records both support and challenge items returned by research", async () => {
+    window.history.replaceState({}, "", "/case?imported=1");
+    window.localStorage.setItem(CASE_STORAGE_KEY, savedCase("Research Corp"));
+    const fetchMock = vi.fn(async (input: RequestInfo) => {
+      const url = String(input);
+      if (url === "/api/research") {
+        return {
+          ok: true,
+          json: async () => ({
+            claimId: "imported-1",
+            items: [
+              {
+                stance: "SUPPORTS",
+                text: "A teammate described end-to-end ownership.",
+                sourceKind: "FIRST_PERSON_EXPERIENCE",
+                sourceLabel: "Talk",
+                sourceUrl: "https://atlas.example.com/talk",
+                verificationStatus: "VERIFIED",
+              },
+              {
+                stance: "CHALLENGES",
+                text: "Approvals still gate production changes.",
+                sourceKind: "FIRST_PERSON_EXPERIENCE",
+                sourceLabel: "Notes",
+                sourceUrl: "https://notes.example.com/approvals",
+                verificationStatus: "VERIFIED",
+              },
+            ],
+          }),
+        };
+      }
+      throw new Error("unexpected fetch " + url);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<CaseApp />);
+    const selects = await screen.findAllByRole("combobox");
+    const priority = selects[0];
+    expect(priority).toBeDefined();
+    if (!priority) return;
+    await act(async () => {
+      fireEvent.change(priority, { target: { value: "CRITICAL" } });
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /이 항목 찾아보기|Look this up/ }));
+    });
+    fireEvent.click(screen.getByText(/근거 보기|View evidence/));
+    expect(screen.getByText("Talk")).toBeTruthy();
+    expect(screen.getByText("Notes")).toBeTruthy();
+    vi.unstubAllGlobals();
+  });
 });

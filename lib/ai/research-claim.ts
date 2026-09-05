@@ -1,4 +1,5 @@
 import { verifyEvidence } from "@/lib/ai/verify-evidence";
+import { fetchPublicText } from "@/lib/webmcp/http-url";
 import { clusterEvidence, scoreEvidenceRelevance } from "@/lib/domain/evidence-relevance";
 import { chatJson } from "@/lib/ai/client";
 import { hostedAiConfig } from "@/lib/ai/env";
@@ -41,26 +42,8 @@ export type ResearchClaimResult = {
 };
 
 async function fetchSourceText(url: string): Promise<string> {
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 1500);
-    const response = await fetch(url, {
-      headers: { accept: "text/html,text/plain" },
-      redirect: "follow",
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    if (!response.ok) return "";
-    return (await response.text())
-      .replace(/<script[\s\S]*?<\/script>/gi, " ")
-      .replace(/<style[\s\S]*?<\/style>/gi, " ")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 4000);
-  } catch {
-    return "";
-  }
+  if (isRestrictedFetchHost(url)) return "";
+  return fetchPublicText(url);
 }
 
 function sourceKindFor(
@@ -75,35 +58,48 @@ function sourceKindFor(
       if (hitHost === companyHost) return "EMPLOYER_OFFICIAL";
     }
   } catch {
-    return "FIRST_PERSON_EXPERIENCE";
+    return "OTHER_PUBLIC";
   }
   const body = text.toLowerCase();
   if (/i worked|we shipped|저는 .{0,12}일했|전직|현직|우리 팀/.test(body)) {
     return "FIRST_PERSON_EXPERIENCE";
   }
-  return "FIRST_PERSON_EXPERIENCE";
+  return "OTHER_PUBLIC";
+}
+
+function usableHits(
+  input: ResearchClaimInput,
+  hits: readonly WebSearchHit[],
+): WebSearchHit[] {
+  const posting = input.jobPostingUrl;
+  const unique: WebSearchHit[] = [];
+  for (const hit of hits) {
+    if (isLowQualityHit(hit) || isRestrictedFetchHost(hit.url)) continue;
+    if (posting && isSameSource(hit.url, posting)) continue;
+    if (unique.some((item) => item.url === hit.url)) continue;
+    unique.push(hit);
+  }
+  return unique;
 }
 
 async function candidatesFromHits(
   input: ResearchClaimInput,
   hits: readonly WebSearchHit[],
+  idPrefix: string,
 ): Promise<ResearchCandidate[]> {
-  const posting = input.jobPostingUrl;
-  const unique = hits.filter((hit) => {
-    if (isLowQualityHit(hit) || isRestrictedFetchHost(hit.url)) return false;
-    if (posting && isSameSource(hit.url, posting)) return false;
-    return true;
-  });
   const researched = await Promise.all(
-    unique.slice(0, 4).map(async (hit, index) => {
-      const text = (await fetchSourceText(hit.url)) || hit.title;
-      const verdict = verifyEvidence({
-        employerStatement: input.employerStatement,
-        evidenceText: text,
-        sourceUrl: hit.url,
-      });
+    usableHits(input, hits).slice(0, 2).map(async (hit, index) => {
+      const fetched = await fetchSourceText(hit.url);
+      const text = fetched || hit.title;
+      const verdict = fetched
+        ? verifyEvidence({
+            employerStatement: input.employerStatement,
+            evidenceText: fetched,
+            sourceUrl: hit.url,
+          })
+        : { stance: "NEUTRAL" as const, verificationStatus: "INSUFFICIENT" as const };
       return {
-        id: `hit-${index}`,
+        id: `${idPrefix}-${index}`,
         sourceUrl: hit.url,
         sourceLabel: hit.title || hit.url,
         sourceKind: sourceKindFor(hit.url, text, input.companyWebsite),
@@ -202,37 +198,13 @@ export async function researchClaim(
   const queries = await hostedResearchQueries(input);
   const supportHits = await searchPublicWeb(queries.support);
   const counterHits = await searchPublicWeb(queries.counter);
-  const merged = [...supportHits, ...counterHits].filter(
-    (hit, index, all) => all.findIndex((item) => item.url === hit.url) === index,
+  const support = await candidatesFromHits(input, supportHits, "support");
+  const counter = await candidatesFromHits(
+    input,
+    counterHits.filter((hit) => support.every((item) => item.sourceUrl !== hit.url)),
+    "counter",
   );
-  let candidates = await candidatesFromHits(input, merged);
-  if (candidates.length === 0 && input.jobPostingUrl) {
-    const officialText = await fetchSourceText(input.jobPostingUrl);
-    if (officialText) {
-      const verdict = verifyEvidence({
-        employerStatement: input.employerStatement,
-        evidenceText: officialText,
-        sourceUrl: input.jobPostingUrl,
-      });
-      candidates = clusterEvidence([
-        {
-          id: "official",
-          sourceUrl: input.jobPostingUrl,
-          sourceLabel: "Job posting",
-          sourceKind: "EMPLOYER_OFFICIAL" as const,
-          text: officialText,
-          stance: verdict.stance,
-          verificationStatus: verdict.verificationStatus,
-          ...scoreEvidenceRelevance({
-            role: input.role,
-            location: "Seoul",
-            evidenceText: officialText,
-            sourceUrl: input.jobPostingUrl,
-          }),
-        },
-      ]) as ResearchCandidate[];
-    }
-  }
+  const candidates = [...support, ...counter];
   if (candidates.length > 0) {
     return { candidates, counterevidenceAttempted: true };
   }
@@ -243,7 +215,7 @@ export async function researchClaim(
         id: "insufficient",
         sourceUrl: input.jobPostingUrl || "https://html.duckduckgo.com/html/",
         sourceLabel: "Public web search",
-        sourceKind: "FIRST_PERSON_EXPERIENCE" as const,
+        sourceKind: "OTHER_PUBLIC" as const,
         text: `No independent public source confirmed ${input.unresolvedVariable}`,
         stance: "NEUTRAL" as const,
         verificationStatus: "INSUFFICIENT" as const,

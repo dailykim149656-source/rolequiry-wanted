@@ -23,17 +23,11 @@ describe("researchClaim", () => {
     vi.unstubAllGlobals();
   });
 
-  it("cites the official posting URL instead of example.com", async () => {
+  it("does not cite example.com or fetch the original posting when search is empty", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo) => {
       const url = String(input);
       if (url.includes("html.duckduckgo.com")) {
         return { ok: true, text: async () => "<html></html>" };
-      }
-      if (url.includes("recruit.wanted.co.kr")) {
-        return {
-          ok: true,
-          text: async () => "국내외 출장 및 고객사 현장 업무가 가능하신 분",
-        };
       }
       return { ok: false, text: async () => "" };
     });
@@ -45,15 +39,20 @@ describe("researchClaim", () => {
       unresolvedVariable: "출장은 얼마나 잦고 얼마나 몰리나?",
       jobPostingUrl: "https://recruit.wanted.co.kr/wd/382364",
     });
-    expect(result.candidates.some((item) => item.sourceUrl.includes("wanted.co.kr"))).toBe(true);
+    const fetched = fetchMock.mock.calls.map((call) => String(call));
+    expect(fetched.some((url) => url.includes("recruit.wanted.co.kr"))).toBe(false);
     expect(result.candidates.every((item) => !item.sourceUrl.includes("example.com"))).toBe(true);
+    expect(result.candidates.every((item) => item.verificationStatus === "INSUFFICIENT")).toBe(true);
     vi.unstubAllGlobals();
   });
 
-  it("quotes fetched official page text instead of restating the posting", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      text: async () => "국내외 출장 및 고객사 현장 업무가 가능하신 분. 출장일비 지원.",
+  it("does not reuse the original job posting as evidence when search is empty", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo) => {
+      const url = String(input);
+      if (url.includes("html.duckduckgo.com")) {
+        return { ok: true, text: async () => "<html></html>" };
+      }
+      return { ok: true, text: async () => "국내외 출장 및 고객사 현장 업무가 가능하신 분. 출장일비 지원." };
     });
     vi.stubGlobal("fetch", fetchMock);
     const result = await researchClaim({
@@ -63,8 +62,10 @@ describe("researchClaim", () => {
       unresolvedVariable: "출장은 얼마나 잦고 얼마나 몰리나?",
       jobPostingUrl: "https://recruit.wanted.co.kr/wd/382364",
     });
-    expect(result.candidates[0]?.text).toContain("출장일비 지원");
-    expect(result.candidates[0]?.text).not.toContain("careers materials restated");
+    const fetched = fetchMock.mock.calls.map((call) => String(call[0]));
+    expect(fetched.some((url) => url.includes("recruit.wanted.co.kr"))).toBe(false);
+    expect(result.candidates.every((item) => item.verificationStatus === "INSUFFICIENT")).toBe(true);
+    expect(result.candidates.every((item) => !item.text.includes("출장일비 지원"))).toBe(true);
     vi.unstubAllGlobals();
   });
 
@@ -297,6 +298,61 @@ describe("searchPublicWeb", () => {
     vi.stubGlobal("fetch", fetchMock);
     const hits = await searchPublicWeb("리에종드로렌 화장품");
     expect(hits.map((hit) => hit.url)).toEqual(["https://liaisondeloren.co.kr/"]);
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("researchClaim channels", () => {
+  it("keeps a counter hit even when support already filled the first four", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("html.duckduckgo.com")) {
+        const body = String(init?.body ?? "");
+        const isCounter = /micromanagement|승인|friction/.test(decodeURIComponent(body.replace(/\+/g, " ")));
+        const html = isCounter
+          ? '<a class="result__a" href="https://notes.example.com/approvals">승인 절차가 길다</a>'
+          : '<a class="result__a" href="https://a.example.com/1">경험1</a><a class="result__a" href="https://b.example.com/2">경험2</a><a class="result__a" href="https://c.example.com/3">경험3</a><a class="result__a" href="https://d.example.com/4">경험4</a>';
+        return { ok: true, text: async () => html };
+      }
+      return {
+        ok: true,
+        text: async () => url.includes("notes.example.com")
+          ? "승인 절차가 길어서  autonom적으로 일하지 못했다."
+          : "저는 이 팀에서 일했습니다. 자율성이 높았습니다.",
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await researchClaim({
+      company: "Atlas",
+      role: "Engineer",
+      employerStatement: "Own production systems end to end.",
+      unresolvedVariable: "Who owns production changes after launch?",
+    });
+    expect(result.candidates.some((item) => item.sourceUrl.includes("notes.example.com"))).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps a title-only hit as INSUFFICIENT without treating the title as verified evidence", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo) => {
+      const url = String(input);
+      if (url.includes("html.duckduckgo.com")) {
+        return {
+          ok: true,
+          text: async () => '<a class="result__a" href="https://notes.example.com/field">현장 후기 제목만</a>',
+        };
+      }
+      return { ok: false, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await researchClaim({
+      company: "클레로보틱스",
+      role: "시스템엔지니어",
+      employerStatement: "국내외 출장 및 고객사 현장 업무가 가능하신 분",
+      unresolvedVariable: "출장은 얼마나 잦고 얼마나 몰리나?",
+    });
+    const hit = result.candidates.find((item) => item.sourceUrl.includes("notes.example.com"));
+    expect(hit).toBeDefined();
+    expect(hit?.verificationStatus).toBe("INSUFFICIENT");
     vi.unstubAllGlobals();
   });
 });

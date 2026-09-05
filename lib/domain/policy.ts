@@ -192,6 +192,7 @@ function uniqueReportedCount(
 ): number {
   const reports = evidence.filter((item) => {
     if (item.scope !== AUTHORITY_SCOPE.REPORTED_EXPERIENCE) return false;
+    if (item.sourceCategory === "OTHER_PUBLIC") return false;
     if (!stance) return item.stance !== "NEUTRAL";
     return item.stance === stance;
   });
