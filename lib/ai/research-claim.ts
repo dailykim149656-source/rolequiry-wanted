@@ -38,11 +38,35 @@ function officialUrl(input: ResearchClaimInput): string {
   return "https://www.wanted.co.kr/";
 }
 
+async function fetchSourceText(url: string): Promise<string> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 1500);
+    const response = await fetch(url, {
+      headers: { accept: "text/html,text/plain" },
+      redirect: "follow",
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!response.ok) return "";
+    return (await response.text())
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 4000);
+  } catch {
+    return "";
+  }
+}
+
 export async function researchClaim(
   input: ResearchClaimInput,
 ): Promise<ResearchClaimResult> {
   const official = officialUrl(input);
-  const supportingText = `${input.company} careers materials restated: ${input.employerStatement}`;
+  const fetched = await fetchSourceText(official);
+  const supportingText = fetched || `${input.company} careers materials restated: ${input.employerStatement}`;
   const counterText = `No independent public source confirmed ${input.unresolvedVariable}`;
   const config = hostedAiConfig();
   if (config.enabled) {

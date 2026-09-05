@@ -103,6 +103,8 @@ describe("Wanted Edition sample case", () => {
     expect(screen.queryByText("WebMCP live")).toBeNull();
     expect(screen.queryByText("Priority not set")).toBeNull();
     expect(screen.queryByText("What is settled, what is still open, and what to ask next.")).toBeNull();
+    expect(screen.queryByText("Priorities ready")).toBeNull();
+    expect(screen.getByText("이 항목부터 조사하면 됩니다")).toBeTruthy();
   });
 
   it("switches chrome copy between Korean and English", () => {

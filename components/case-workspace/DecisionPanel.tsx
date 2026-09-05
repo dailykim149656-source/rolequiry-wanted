@@ -189,10 +189,11 @@ function PrioritiesRequired() {
 }
 
 function AgentStarter() {
+  const { copy } = useLocale();
   const steps = [
-    ["1", "Ask “What should I investigate next?”"],
-    ["2", "Verify the active claim with public evidence."],
-    ["3", "Record the answer, then check again."],
+    ["1", copy.starter1],
+    ["2", copy.starter2],
+    ["3", copy.starter3],
   ] as const;
 
   return (
@@ -202,10 +203,9 @@ function AgentStarter() {
           <Icon className="size-5" name="spark" />
         </span>
         <div>
-          <h3 className="text-lg font-semibold">Priorities ready</h3>
+          <h3 className="text-lg font-semibold">{copy.prioritiesReady}</h3>
           <p className="mt-1 text-sm leading-6 text-secondary">
-            Your agent reads and writes this same case as the investigation
-            moves forward.
+            {copy.prioritiesReadyBody}
           </p>
         </div>
       </div>

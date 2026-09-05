@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { researchClaim } from "@/lib/ai/research-claim";
 import { verifyEvidence } from "@/lib/ai/verify-evidence";
 
 describe("researchClaim", () => {
   it("returns at least one citation URL and a counterevidence attempt", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
     const result = await researchClaim({
       company: "Atlas",
       role: "Forward Deployed Engineer",
@@ -17,6 +18,7 @@ describe("researchClaim", () => {
       true,
     );
     expect(result.counterevidenceAttempted).toBe(true);
+    vi.unstubAllGlobals();
   });
 
   it("cites the official posting URL instead of example.com", async () => {
@@ -29,6 +31,24 @@ describe("researchClaim", () => {
     });
     expect(result.candidates.some((item) => item.sourceUrl.includes("wanted.co.kr"))).toBe(true);
     expect(result.candidates.every((item) => !item.sourceUrl.includes("example.com"))).toBe(true);
+  });
+
+  it("quotes fetched official page text instead of restating the posting", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () => "국내외 출장 및 고객사 현장 업무가 가능하신 분. 출장일비 지원.",
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await researchClaim({
+      company: "클레로보틱스",
+      role: "시스템엔지니어",
+      employerStatement: "국내외 출장 및 고객사 현장 업무가 가능하신 분",
+      unresolvedVariable: "출장은 얼마나 잦고 얼마나 몰리나?",
+      jobPostingUrl: "https://recruit.wanted.co.kr/wd/382364",
+    });
+    expect(result.candidates[0]?.text).toContain("출장일비 지원");
+    expect(result.candidates[0]?.text).not.toContain("careers materials restated");
+    vi.unstubAllGlobals();
   });
 });
 
