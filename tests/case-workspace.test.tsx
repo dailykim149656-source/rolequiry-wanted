@@ -168,12 +168,21 @@ describe("case workspace status", () => {
     ).toBeNull();
   });
 
-  it("keeps the employer claims link at the minimum touch-target height", () => {
+  it("keeps employer claims as compact text under the location line", () => {
     renderWorkspace();
 
-    expect(
-      screen.getByRole("link", { name: "Employer claims" }).className,
-    ).toContain("min-h-11");
+    const link = screen.getByRole("link", { name: "Employer claims" });
+    expect(link.className).not.toContain("min-h-11");
+    expect(link.className).toContain("text-[#3366ff]");
+    const header = link.closest("section");
+    expect(header).toBeTruthy();
+    const chipRow = header?.querySelector("div.flex.flex-wrap");
+    expect(chipRow?.contains(link)).toBe(false);
+    expect(chipRow?.textContent).toContain("Aligned");
+    expect(chipRow?.textContent).toContain("Mismatch");
+    expect(chipRow?.textContent).toContain("Unknown");
+    expect(chipRow?.textContent).not.toContain("Employer claims");
+    expect(chipRow?.parentElement).toBe(header);
   });
 
   it("puts the Decision Path before the Claim Board for narrow screens", () => {

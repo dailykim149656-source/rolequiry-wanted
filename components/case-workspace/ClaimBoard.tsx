@@ -110,7 +110,7 @@ function ClaimCard({
                       : claim.importance === "HIGH"
                         ? copy.importanceHigh
                         : copy.importanceCritical
-                  : copy.priorityNotSet} · {statusLabel(isSet ? claim.status : "PRIORITY_NOT_SET")}
+                  : copy.priorityNotSet}
               </p>
             </div>
             <StatusBadge status={isSet ? claim.status : "PRIORITY_NOT_SET"} />
@@ -179,14 +179,6 @@ function PriorityControl({
 }
 
 type DisplayStatus = DerivedClaim["status"] | "PRIORITY_NOT_SET";
-
-function statusLabel(status: DisplayStatus): string {
-  if (status === "SUPPORTED") return "확인됨";
-  if (status === "CHALLENGED") return "긴장";
-  if (status === "MATERIAL_AMBIGUITY") return "긴장";
-  if (status === "PRIORITY_NOT_SET") return "미설정";
-  return "미확인";
-}
 
 function StatusBadge({ status }: { readonly status: DisplayStatus }) {
   const configs: Record<DisplayStatus, readonly [IconName, string, string]> = {

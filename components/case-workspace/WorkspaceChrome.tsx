@@ -88,29 +88,29 @@ export function DossierHeader({
               ? "서울 강남구 · 경력 4년 이상"
               : originLabel}
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <span className="rounded-full bg-[#f2f4f7] px-2.5 py-1 text-xs font-semibold text-[#333]">
-              {copy.aligned} {claims.filter((claim) => claim.status === "SUPPORTED").length}
-            </span>
-            <span className="rounded-full bg-[#f2f4f7] px-2.5 py-1 text-xs font-semibold text-[#333]">
-              {copy.mismatch} {challenged}
-            </span>
-            <span className="rounded-full bg-[#f2f4f7] px-2.5 py-1 text-xs font-semibold text-[#333]">
-              {copy.unknown} {unresolved}
-            </span>
-            <span className="sr-only" data-testid="case-origin">
-              {locale === "en" ? origin : originLabel}
-            </span>
-            {snapshot.source.id === "atlas-fde" ? (
-              <Link
-                className="inline-flex min-h-11 items-center py-2 text-sm font-medium text-[#3366ff]"
-                href="/employer/atlas-fde"
-              >
-                {copy.employerClaims}
-              </Link>
-            ) : null}
-          </div>
+          {snapshot.source.id === "atlas-fde" ? (
+            <Link
+              className="mt-1 inline-block text-[13px] font-medium text-[#3366ff]"
+              href="/employer/atlas-fde"
+            >
+              {copy.employerClaims}
+            </Link>
+          ) : null}
         </div>
+      </div>
+      <div className="mt-2.5 flex flex-wrap gap-2">
+        <span className="rounded-2xl bg-[#f2f4f7] px-2.5 py-1.5 text-xs font-semibold text-[#333]">
+          {copy.aligned} {claims.filter((claim) => claim.status === "SUPPORTED").length}
+        </span>
+        <span className="rounded-2xl bg-[#f2f4f7] px-2.5 py-1.5 text-xs font-semibold text-[#333]">
+          {copy.mismatch} {challenged}
+        </span>
+        <span className="rounded-2xl bg-[#f2f4f7] px-2.5 py-1.5 text-xs font-semibold text-[#333]">
+          {copy.unknown} {unresolved}
+        </span>
+        <span className="sr-only" data-testid="case-origin">
+          {locale === "en" ? origin : originLabel}
+        </span>
       </div>
     </section>
   );

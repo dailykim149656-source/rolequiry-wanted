@@ -107,6 +107,9 @@ describe("Wanted Edition sample case", () => {
     expect(screen.getByText("이 항목부터 조사하면 됩니다")).toBeTruthy();
     expect(screen.queryByText("Due diligence dossier")).toBeNull();
     expect(screen.queryByText(/decision blocker/)).toBeNull();
+    const ownership = screen.getByTestId("claim-technical-ownership");
+    expect(ownership.textContent).toContain("Technical ownership · 매우 중요");
+    expect(ownership.textContent).not.toContain("Technical ownership · 매우 중요 · 긴장");
   });
 
   it("switches chrome copy between Korean and English", () => {
