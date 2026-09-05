@@ -102,8 +102,15 @@ function ClaimCard({
               ) : null}
               <q className="text-[15px] font-bold">{claim.employerStatement}</q>
               <p className="mt-1.5 text-[13px] text-[#666]">
-                {claim.dimension} · {isSet ? claim.importance : "미설정"} ·{" "}
-                {statusLabel(isSet ? claim.status : "PRIORITY_NOT_SET")}
+                {claim.dimension} · {isSet
+                  ? claim.importance === "LOW"
+                    ? copy.importanceLow
+                    : claim.importance === "MEDIUM"
+                      ? copy.importanceMedium
+                      : claim.importance === "HIGH"
+                        ? copy.importanceHigh
+                        : copy.importanceCritical
+                  : copy.priorityNotSet} · {statusLabel(isSet ? claim.status : "PRIORITY_NOT_SET")}
               </p>
             </div>
             <StatusBadge status={isSet ? claim.status : "PRIORITY_NOT_SET"} />

@@ -106,7 +106,7 @@ export function DossierHeader({
                 className="inline-flex min-h-11 items-center py-2 text-sm font-medium text-[#3366ff]"
                 href="/employer/atlas-fde"
               >
-                Employer claims
+                {copy.employerClaims}
               </Link>
             ) : null}
           </div>

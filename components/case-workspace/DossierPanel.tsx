@@ -72,7 +72,7 @@ export function DossierPanel({
             <h2 className="text-lg font-semibold" id="dossier-panel-title">
               {copy.evidence}
             </h2>
-            <span className="sr-only">Due diligence dossier</span>
+            <span className="sr-only">{copy.dossierLabel}</span>
           </div>
           <p className="mt-1 text-sm text-muted">
             {copy.dossierSettled}
@@ -88,8 +88,11 @@ export function DossierPanel({
             data-testid="dossier-blockers"
           >
             {dossier.remainingDecisionBlockers > 0
-              ? `${dossier.remainingDecisionBlockers} decision ${dossier.remainingDecisionBlockers === 1 ? "blocker" : "blockers"} remaining`
-              : "No decision blockers"}
+              ? (dossier.remainingDecisionBlockers === 1
+                  ? copy.blockersRemaining
+                  : copy.blockersRemainingPlural
+                ).replace("{n}", String(dossier.remainingDecisionBlockers))
+              : copy.noBlockers}
           </span>
         ) : null}
       </div>
@@ -104,7 +107,13 @@ export function DossierPanel({
             {dossier.tiers.map((tier) => (
               <div className="mb-4 last:mb-0" key={tier.importance}>
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-                  {tier.importance}
+                  {tier.importance === "LOW"
+                    ? copy.importanceLow
+                    : tier.importance === "MEDIUM"
+                      ? copy.importanceMedium
+                      : tier.importance === "HIGH"
+                        ? copy.importanceHigh
+                        : copy.importanceCritical}
                 </p>
                 <ul className="mt-1.5 space-y-1.5">
                   {tier.entries.map((entry) => (
@@ -143,8 +152,7 @@ export function DossierPanel({
             </div>
             {dossier.interviewPack.length === 0 ? (
               <p className="mt-2 rounded-xl border border-line bg-quiet px-3 py-2.5 text-sm leading-6 text-secondary">
-                No open interview questions. Unresolved claims are either
-                contradicted or awaiting your priority.
+                {copy.noQuestions}
               </p>
             ) : (
               <ol className="mt-2 space-y-2">

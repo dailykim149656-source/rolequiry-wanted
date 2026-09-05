@@ -105,6 +105,8 @@ describe("Wanted Edition sample case", () => {
     expect(screen.queryByText("What is settled, what is still open, and what to ask next.")).toBeNull();
     expect(screen.queryByText("Priorities ready")).toBeNull();
     expect(screen.getByText("이 항목부터 조사하면 됩니다")).toBeTruthy();
+    expect(screen.queryByText("Due diligence dossier")).toBeNull();
+    expect(screen.queryByText(/decision blocker/)).toBeNull();
   });
 
   it("switches chrome copy between Korean and English", () => {
