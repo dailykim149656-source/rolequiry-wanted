@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { researchClaim } from "@/lib/ai/research-claim";
-import { parseDuckDuckGoHits, isLowQualityHit } from "@/lib/ai/web-search";
+import { parseDuckDuckGoHits, isLowQualityHit, searchPublicWeb } from "@/lib/ai/web-search";
 import { chatgptDeepDiveHref, chatgptDeepDivePrompt, researchQueriesFromModel } from "@/lib/ai/research-claim";
 import { verifyEvidence } from "@/lib/ai/verify-evidence";
 
@@ -245,5 +245,23 @@ describe("chatgptDeepDivePrompt", () => {
     expect(prompt).not.toContain("record_research_evidence");
     expect(chatgptDeepDiveHref(prompt)).toContain("https://chatgpt.com/?q=");
     expect(chatgptDeepDiveHref(prompt)).toContain("50%25%20travel");
+  });
+});
+
+describe("searchPublicWeb", () => {
+  it("posts the DuckDuckGo HTML form instead of a GET that returns no results", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo, init?: RequestInit) => {
+      expect(String(input)).toBe("https://html.duckduckgo.com/html/");
+      expect(init?.method).toBe("POST");
+      expect(String(init?.body)).toContain("q=");
+      return {
+        ok: true,
+        text: async () => '<a class="result__a" href="https://liaisondeloren.co.kr/">Liaison de Loren</a>',
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const hits = await searchPublicWeb("리에종드로렌 화장품");
+    expect(hits.map((hit) => hit.url)).toEqual(["https://liaisondeloren.co.kr/"]);
+    vi.unstubAllGlobals();
   });
 });

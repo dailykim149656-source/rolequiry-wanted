@@ -60,12 +60,18 @@ export function publicSearchQuery(input: {
 
 export async function searchPublicWeb(query: string): Promise<WebSearchHit[]> {
   if (!query) return [];
-  const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2500);
-    const response = await fetch(url, {
-      headers: { accept: "text/html", "user-agent": "RolequiryWanted/1.0" },
+    const timer = setTimeout(() => controller.abort(), 4000);
+    const response = await fetch("https://html.duckduckgo.com/html/", {
+      method: "POST",
+      headers: {
+        accept: "text/html",
+        "content-type": "application/x-www-form-urlencoded",
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      },
+      body: new URLSearchParams({ q: query }).toString(),
       redirect: "follow",
       signal: controller.signal,
     });
