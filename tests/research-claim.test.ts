@@ -145,8 +145,17 @@ describe("verifyEvidence", () => {
       evidenceText: "The official careers page repeats: 50% travel is expected.",
       sourceUrl: "https://atlas.example.com/careers",
     });
-    expect(verdict.verificationStatus).toBe("VERIFIED");
+    expect(verdict.verificationStatus).toBe("INSUFFICIENT");
     expect(verdict.stance).toBe("SUPPORTS");
+  });
+
+  it("does not verify a long page that merely repeats nouns", () => {
+    const verdict = verifyEvidence({
+      employerStatement: "50% travel is expected.",
+      evidenceText: "travel travel travel expected expected expected cafeteria lunch noon ".repeat(40),
+      sourceUrl: "https://news.example.com/story",
+    });
+    expect(verdict.verificationStatus).toBe("INSUFFICIENT");
   });
 });
 

@@ -1,10 +1,6 @@
 import { extractClaimsFromJobText, extractClaimsWithHostedModel } from "@/lib/ai/extract-role";
 import { normalizeHttpUrl } from "@/lib/webmcp/http-url";
-import {
-  parseWantedJobHtml,
-  parseWantedJobJson,
-  wantedJobApiUrl,
-} from "@/lib/sources/wanted";
+import { parseWantedJobHtml } from "@/lib/sources/wanted";
 
 const MAX_TEXT = 40_000;
 
@@ -23,17 +19,6 @@ function decodeHtml(value: string): string {
 
 export async function fetchJobSource(url: string) {
   const normalized = normalizeHttpUrl(url, "job posting URL");
-  const apiUrl = wantedJobApiUrl(normalized);
-  if (apiUrl) {
-    const apiResponse = await fetch(apiUrl, {
-      headers: { accept: "application/json" },
-      redirect: "follow",
-    });
-    if (apiResponse.ok) {
-      const parsed = parseWantedJobJson(await apiResponse.json(), normalized);
-      if (parsed && parsed.sourceText.length >= 40) return parsed;
-    }
-  }
   const response = await fetch(normalized, {
     headers: { accept: "text/html,text/plain" },
     redirect: "follow",

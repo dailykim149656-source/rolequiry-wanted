@@ -8,7 +8,6 @@ import {
   useSyncExternalStore,
 } from "react";
 import { CaseWorkspace } from "@/components/CaseWorkspace";
-import { chatgptDeepDiveHref, chatgptDeepDivePrompt } from "@/lib/ai/research-claim";
 import {
   CASE_STORAGE_KEY,
   createCaseExport,
@@ -227,7 +226,7 @@ export function CaseApp() {
       if (!response.ok || !payload.claimId || !payload.sourceUrl || !payload.text || !payload.sourceKind || !payload.sourceLabel || !payload.stance || !payload.verificationStatus) {
         setCaseFileStatus({
           error: true,
-          message: payload.error ?? "이 항목을 찾지 못했습니다. ChatGPT로 더 깊게 보기를 눌러 보세요.",
+          message: payload.error ?? "공개된 정보에서 이 항목을 아직 확인하지 못했습니다.",
         });
         return;
       }
@@ -250,75 +249,10 @@ export function CaseApp() {
     } catch {
       setCaseFileStatus({
         error: true,
-        message: "이 항목을 찾지 못했습니다. ChatGPT로 더 깊게 보기를 눌러 보세요.",
+        message: "공개된 정보에서 이 항목을 아직 확인하지 못했습니다.",
       });
     } finally {
       setInvestigating(false);
-    }
-  };
-
-  const shareCase = async () => {
-    const url = window.location.href;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCaseFileStatus({ error: false, message: "결과 링크를 복사했습니다." });
-    } catch {
-      setCaseFileStatus({ error: true, message: "링크를 복사하지 못했습니다." });
-    }
-  };
-
-  const openDeepDive = async () => {
-    const current = store.getState();
-    const claim = current.derived.claims.find((item) => item.id === current.activeProbeId);
-    if (!claim) {
-      setCaseFileStatus({
-        error: true,
-        message: "먼저 중요도를 고르면 다음에 볼 항목이 정해집니다.",
-      });
-      return;
-    }
-    const prompt = chatgptDeepDivePrompt({
-      caseUrl: window.location.href,
-      company: current.source.company,
-      role: current.source.role,
-      employerStatement: claim.employerStatement,
-      unresolvedVariable: claim.unresolvedVariable,
-      question: claim.measurableForm,
-    });
-    const href = chatgptDeepDiveHref(prompt);
-    try {
-      await navigator.clipboard.writeText(prompt);
-    } catch {
-      // Opening ChatGPT with the prompt in the URL is enough if clipboard is blocked.
-    }
-    const opened = window.open(href, "_blank", "noopener,noreferrer");
-    setCaseFileStatus({
-      error: !opened,
-      message: opened
-        ? "ChatGPT에 이 케이스 안내를 넣어 열었습니다. 붙여넣기는 복사해 뒀습니다."
-        : "팝업이 막혔습니다. 복사된 안내를 ChatGPT에 붙여넣으세요.",
-    });
-  };
-
-  const leaveFeedback = async () => {
-    const note = window.prompt("지원할지 판단하는 데 도움이 됐나요? 한 줄만 적어 주세요.");
-    if (!note || !note.trim()) return;
-    try {
-      const response = await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          note: note.trim(),
-          role: snapshot.source.role,
-          company: snapshot.source.company,
-        }),
-      });
-      setCaseFileStatus({
-        error: !response.ok,
-        message: response.ok ? "피드백을 기록했습니다." : "피드백을 저장하지 못했습니다.",
-      });
-    } catch {
-      setCaseFileStatus({ error: true, message: "피드백을 저장하지 못했습니다." });
     }
   };
 
@@ -334,9 +268,6 @@ export function CaseApp() {
       onRank={investigate}
       onRecordAnswer={canned ? () => store.recordAnswer(canned) : undefined}
       onReset={store.reset}
-      onShare={shareCase}
-      onFeedback={leaveFeedback}
-      onDeepDive={openDeepDive}
       investigating={investigating}
       snapshot={snapshot}
       webmcpCount={webmcpCount}

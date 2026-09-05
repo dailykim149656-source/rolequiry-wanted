@@ -26,21 +26,20 @@ export function verifyEvidence(input: VerifyEvidenceInput): VerifyEvidenceResult
   if (!claim || !text) {
     return { stance: "NEUTRAL", verificationStatus: "INSUFFICIENT" };
   }
-  if (text.includes(claim) || claim.includes(text)) {
-    return { stance: "SUPPORTS", verificationStatus: "VERIFIED" };
-  }
+  const quoteMatch = text.includes(claim) || (claim.length >= 24 && claim.includes(text) && text.length >= 24);
   const claimTokens = tokens(claim);
   const textTokens = new Set(tokens(text));
   const overlap = claimTokens.filter((token) => textTokens.has(token)).length;
-  if (overlap >= Math.max(2, Math.ceil(claimTokens.length * 0.5))) {
-    const challenges =
-      /not|no |never|unlike|contrary|반박|아니다|없음/.test(text.toLowerCase());
-    return {
-      stance: challenges ? "CHALLENGES" : "SUPPORTS",
-      verificationStatus: "VERIFIED",
-    };
+  const enoughOverlap = overlap >= Math.max(2, Math.ceil(claimTokens.length * 0.5));
+  if (!quoteMatch && !enoughOverlap) {
+    return { stance: "NEUTRAL", verificationStatus: "INSUFFICIENT" };
   }
-  return { stance: "NEUTRAL", verificationStatus: "INSUFFICIENT" };
+  const challenges =
+    /not|no |never|unlike|contrary|반박|아니다|없음/.test(text.toLowerCase());
+  return {
+    stance: challenges ? "CHALLENGES" : "SUPPORTS",
+    verificationStatus: "INSUFFICIENT",
+  };
 }
 
 export async function verifyEvidenceWithEscalation(

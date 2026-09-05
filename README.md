@@ -1,72 +1,12 @@
-<p align="center">
-  <img src="docs/assets/readme-hero.svg" alt="Rolequiry — interview the job before it interviews you" width="100%" />
-</p>
+# Rolequiry Wanted Edition
 
-<h1 align="center">R O L E Q U I R Y</h1>
+입사하기 전에, 이 일이 나와 맞는지 한번 더 보세요.
 
-<p align="center">
-  <strong>Interview the job before it interviews you.</strong>
-  <br/>
-  <sub>Most job tools ask, “Can I get hired?” Rolequiry asks, “If I get the offer, <strong>should I join?</strong>”</sub>
-</p>
+원티드 공고 URL을 넣으면 Rolequiry가 공고 문장을 claim으로 나누고, 중요한 항목만 고른 뒤 공개 정보에서 근거를 찾습니다. 점수는 없습니다. 확인된 것, 아직 모르는 것, 면접에서 물을 것만 남깁니다.
 
-<p align="center">
-  <a href="https://rolequiry.com/case"><img alt="Live demo" src="https://img.shields.io/badge/live-rolequiry.com-111111?style=flat-square"></a>
-  <a href="https://rolequiry.com/employer/atlas-fde"><img alt="Employer surface" src="https://img.shields.io/badge/employer-atlas--fde-4b4b4b?style=flat-square"></a>
-  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-157451?style=flat-square"></a>
-  <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white">
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white">
-  <img alt="WebMCP" src="https://img.shields.io/badge/WebMCP-page--native-181818?style=flat-square">
-</p>
+Live: https://rolequiry-wanted.vercel.app
 
-<p align="center">
-  <a href="#why-rolequiry">Why</a> ·
-  <a href="#quick-start">Quick Start</a> ·
-  <a href="#why-webmcp">WebMCP</a> ·
-  <a href="#webmcp-tools">Tools</a> ·
-  <a href="#architecture">Architecture</a> ·
-  <a href="#try-the-agentic-real-role-loop">Agent Loop</a> ·
-  <a href="#known-limitations">Limits</a> ·
-  <a href="#tests">Tests</a>
-</p>
-
-**Your agent investigates. Rolequiry keeps the case.**
-
-Rolequiry separates what an employer has stated from what a candidate actually needs to know.
-
-A second official source can corroborate a published requirement while the lived-experience question remains unresolved.
-
-Change one priority in the page without telling the agent; on the next check, Rolequiry recomputes the shared case and returns a different authoritative probe through WebMCP.
-
-| Current verification | |
-| :--- | :--- |
-| Page-native WebMCP tools | 8 |
-| Tests | 169 across 24 files |
-| Deterministic 13-step browser journey | PASS |
-| Model-facing | 2/2 current hardened contracts, plus 4/4 pre-hardening |
-
-Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. ChatGPT can analyze a JD; Rolequiry turns that analysis into application-owned, inspectable case state for candidate-confirmed priorities, employer claims, evidence and provenance, active uncertainty, and the next verification target.
-
-A bad job is costly for the candidate. A bad hire is costly for the employer. Rolequiry treats both as the same pre-hire mismatch: expectations that were never made inspectable. Candidate due diligence here is expectation alignment before anyone signs — better self-selection on the candidate side, and less early attrition from avoidable expectation gaps on the employer side.
-
-The agent can interpret a resume or career summary, values, constraints, and a non-linear career path in conversation; propose where the role may fit or create leverage; and research the active uncertainty. Rolequiry does not store that raw career narrative or produce a fit score. It records only candidate-confirmed importance, typed claims, evidence provenance, and the deterministic next verification target. Employer-official sources are domain-checked against the job posting's organization; authorship and page contents are not independently authenticated.
-
-> Page-native WebMCP on `/case`. No remote MCP server. Production never installs a fake `modelContext`.
-
----
-
-## Why Rolequiry?
-
-Most job tools are optimized for getting hired, not investigating whether the role is worth accepting.
-
-| Problem | What happens | Rolequiry fix |
-| :--- | :--- | :--- |
-| Hire-first tooling | You land an offer you should have declined | Asks “If I get the offer, should I join?” |
-| Scraped JDs | Mixed-incentive copy is treated as verified fact | Typed WebMCP reads and writes against live case state |
-| Open-ended research | The model keeps searching a topic | Research only the uncertainty that can change *this* decision next |
-| Opaque fit scores | A number buries what is still unknown | No score. App-owned coverage, tension, and next probe |
-
----
+원티드 AI Championship 2026 예선용 standalone web입니다. 공고 원문에 없는 문장은 올리지 않고, 단어가 겹친다고 사실을 확정하지 않습니다.
 
 ## Quick Start
 

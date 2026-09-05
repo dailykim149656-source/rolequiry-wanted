@@ -178,8 +178,8 @@ describe("case workspace status", () => {
     expect(header).toBeTruthy();
     const chipRow = header?.querySelector("div.flex.flex-wrap");
     expect(chipRow?.contains(link)).toBe(false);
-    expect(chipRow?.textContent).toContain("Aligned");
-    expect(chipRow?.textContent).toContain("Mismatch");
+    expect(chipRow?.textContent).toContain("Confirmed");
+    expect(chipRow?.textContent).toContain("Conflicted");
     expect(chipRow?.textContent).toContain("Unknown");
     expect(chipRow?.textContent).not.toContain("Employer claims");
     expect(chipRow?.parentElement).toBe(header);

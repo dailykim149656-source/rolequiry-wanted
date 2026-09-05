@@ -86,9 +86,6 @@ describe("Wanted Edition sample case", () => {
         onRank={() => undefined}
         onRecordAnswer={undefined}
         onReset={() => undefined}
-        onShare={() => undefined}
-        onFeedback={() => undefined}
-        onDeepDive={() => undefined}
         snapshot={snapshot}
         webmcpCount={0}
         webmcpDiagnostics={[]}
@@ -100,7 +97,7 @@ describe("Wanted Edition sample case", () => {
     expect(screen.getByText("밖에서 보이는 조건")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "다음에 볼 것" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "이 항목 찾아보기" })).toBeTruthy();
-    expect(screen.getByText(/잘 맞음/)).toBeTruthy();
+    expect(screen.getByText(/근거 확인/)).toBeTruthy();
     expect(screen.queryByText("Active probe")).toBeNull();
     expect(screen.queryByRole("button", { name: "Export case JSON" })).toBeNull();
     expect(screen.queryByText("WebMCP live")).toBeNull();
@@ -113,9 +110,9 @@ describe("Wanted Edition sample case", () => {
     const ownership = screen.getByTestId("claim-technical-ownership");
     expect(ownership.textContent).toContain("Technical ownership · 매우 중요");
     expect(ownership.textContent).not.toContain("Technical ownership · 매우 중요 · 긴장");
-    expect(screen.getAllByRole("button", { name: "결과 공유" }).length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: "피드백 남기기" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "ChatGPT로 더 깊게 보기" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "결과 공유" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "피드백 남기기" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "ChatGPT로 더 깊게 보기" })).toBeNull();
   });
 
   it("switches chrome copy between Korean and English", () => {
@@ -133,9 +130,6 @@ describe("Wanted Edition sample case", () => {
         onRank={() => undefined}
         onRecordAnswer={undefined}
         onReset={() => undefined}
-        onShare={() => undefined}
-        onFeedback={() => undefined}
-        onDeepDive={() => undefined}
         snapshot={snapshot}
         webmcpCount={0}
         webmcpDiagnostics={[]}

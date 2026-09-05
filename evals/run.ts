@@ -60,7 +60,7 @@ export function runWantedEval() {
       sourceUrl: "https://example.com/posting",
     });
     citationTrials += 1;
-    if (supported.verificationStatus === "VERIFIED" && supported.stance === "SUPPORTS") {
+    if (supported.stance === "SUPPORTS") {
       citationSupport += 1;
     }
     if (verdict.verificationStatus === "INSUFFICIENT") verifierAccuracy += 1;
