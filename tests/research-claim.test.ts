@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { researchClaim } from "@/lib/ai/research-claim";
-import { parseDuckDuckGoHits } from "@/lib/ai/web-search";
+import { parseDuckDuckGoHits, isLowQualityHit } from "@/lib/ai/web-search";
+import { chatgptDeepDivePrompt, researchQueriesFromModel } from "@/lib/ai/research-claim";
 import { verifyEvidence } from "@/lib/ai/verify-evidence";
 
 describe("researchClaim", () => {
@@ -158,5 +159,83 @@ describe("parseDuckDuckGoHits", () => {
       "https://blog.clerobotics.com/field-work",
       "https://news.example.com/clerobotics-travel",
     ]);
+  });
+});
+
+
+  it("drops course-ad pages from live search results", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo) => {
+      const url = String(input);
+      if (url.includes("html.duckduckgo.com")) {
+        return {
+          ok: true,
+          text: async () =>
+            '<a class="result__a" href="https://www.simpliaxis.com/resources/forward-deployed-engineer-travel">LIMITED TIME SEP FLASH SALE</a><a class="result__a" href="https://blog.clerobotics.com/field-work">현장 업무 후기</a>',
+        };
+      }
+      if (url.includes("blog.clerobotics.com")) {
+        return {
+          ok: true,
+          text: async () => "국내외 출장 및 고객사 현장 업무가 가능하신 분. 주 단위로 고객사에 나간다.",
+        };
+      }
+      return { ok: false, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await researchClaim({
+      company: "클레로보틱스",
+      role: "시스템엔지니어",
+      employerStatement: "국내외 출장 및 고객사 현장 업무가 가능하신 분",
+      unresolvedVariable: "출장은 얼마나 잦고 얼마나 몰리나?",
+      jobPostingUrl: "https://recruit.wanted.co.kr/wd/382364",
+    });
+    expect(result.candidates.some((item) => item.sourceUrl.includes("simpliaxis.com"))).toBe(false);
+    expect(result.candidates.some((item) => item.sourceUrl.includes("blog.clerobotics.com"))).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
+describe("research query quality", () => {
+  it("drops course-ad hits before citing them", () => {
+    expect(
+      isLowQualityHit({
+        url: "https://www.simpliaxis.com/resources/forward-deployed-engineer-travel",
+        title: "LIMITED TIME SEP FLASH SALE",
+      }),
+    ).toBe(true);
+    expect(
+      isLowQualityHit({
+        url: "https://blog.clerobotics.com/field-work",
+        title: "현장 업무 후기",
+      }),
+    ).toBe(false);
+  });
+
+  it("uses hosted support and counter queries when the model returns them", () => {
+    const queries = researchQueriesFromModel(
+      {
+        company: "클레로보틱스",
+        role: "시스템엔지니어",
+        employerStatement: "국내외 출장 및 고객사 현장 업무가 가능하신 분",
+        unresolvedVariable: "출장은 얼마나 잦고 얼마나 몰리나?",
+      },
+      {
+        supportQuery: "클레로보틱스 현장 출장 빈도",
+        counterQuery: "클레로보틱스 출장 없다 후기",
+      },
+    );
+    expect(queries.support).toBe("클레로보틱스 현장 출장 빈도");
+    expect(queries.counter).toBe("클레로보틱스 출장 없다 후기");
+  });
+});
+
+describe("chatgptDeepDivePrompt", () => {
+  it("points ChatGPT at the live case URL and the page tools", () => {
+    const prompt = chatgptDeepDivePrompt(
+      "http://127.0.0.1:3017/case?sample=atlas-fde",
+      "How concentrated is travel?",
+    );
+    expect(prompt).toContain("http://127.0.0.1:3017/case?sample=atlas-fde");
+    expect(prompt).toContain("select_decision_changer");
+    expect(prompt).toContain("record_research_evidence");
   });
 });

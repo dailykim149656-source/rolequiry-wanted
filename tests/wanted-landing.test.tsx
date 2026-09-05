@@ -88,6 +88,7 @@ describe("Wanted Edition sample case", () => {
         onReset={() => undefined}
         onShare={() => undefined}
         onFeedback={() => undefined}
+        onDeepDive={() => undefined}
         snapshot={snapshot}
         webmcpCount={0}
         webmcpDiagnostics={[]}
@@ -114,6 +115,7 @@ describe("Wanted Edition sample case", () => {
     expect(ownership.textContent).not.toContain("Technical ownership · 매우 중요 · 긴장");
     expect(screen.getAllByRole("button", { name: "결과 공유" }).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "피드백 남기기" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "ChatGPT로 더 깊게 보기" })).toBeTruthy();
   });
 
   it("switches chrome copy between Korean and English", () => {
@@ -133,6 +135,7 @@ describe("Wanted Edition sample case", () => {
         onReset={() => undefined}
         onShare={() => undefined}
         onFeedback={() => undefined}
+        onDeepDive={() => undefined}
         snapshot={snapshot}
         webmcpCount={0}
         webmcpDiagnostics={[]}

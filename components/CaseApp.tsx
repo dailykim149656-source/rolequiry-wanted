@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { CaseWorkspace } from "@/components/CaseWorkspace";
+import { chatgptDeepDivePrompt } from "@/lib/ai/research-claim";
 import {
   CASE_STORAGE_KEY,
   createCaseExport,
@@ -226,6 +227,19 @@ export function CaseApp() {
     }
   };
 
+  const openDeepDive = async () => {
+    const current = store.getState();
+    const claim = current.derived.claims.find((item) => item.id === current.activeProbeId);
+    const prompt = chatgptDeepDivePrompt(window.location.href, claim?.measurableForm);
+    try {
+      await navigator.clipboard.writeText(prompt);
+      window.open("https://chatgpt.com/", "_blank", "noopener,noreferrer");
+      setCaseFileStatus({ error: false, message: "ChatGPT에 붙여넣을 안내를 복사했습니다." });
+    } catch {
+      setCaseFileStatus({ error: true, message: "안내를 복사하지 못했습니다." });
+    }
+  };
+
   const leaveFeedback = async () => {
     const note = window.prompt("지원할지 판단하는 데 도움이 됐나요? 한 줄만 적어 주세요.");
     if (!note || !note.trim()) return;
@@ -262,6 +276,7 @@ export function CaseApp() {
       onReset={store.reset}
       onShare={shareCase}
       onFeedback={leaveFeedback}
+      onDeepDive={openDeepDive}
       snapshot={snapshot}
       webmcpCount={webmcpCount}
       webmcpDiagnostics={webmcpDiagnostics}

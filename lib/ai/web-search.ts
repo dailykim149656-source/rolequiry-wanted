@@ -77,6 +77,27 @@ export async function searchPublicWeb(query: string): Promise<WebSearchHit[]> {
   }
 }
 
+const LOW_QUALITY_HOST_PARTS = [
+  "simpliaxis",
+  "udemy",
+  "coursera",
+  "skillshare",
+  "clickfunnels",
+  "hotmart",
+];
+
+const LOW_QUALITY_TITLE = /flash sale|limited time|% off|all courses|add to cart|수강|강의 할인/i;
+
+export function isLowQualityHit(hit: WebSearchHit): boolean {
+  try {
+    const host = new URL(hit.url).hostname.replace(/^www\./, "").toLowerCase();
+    if (LOW_QUALITY_HOST_PARTS.some((part) => host.includes(part))) return true;
+  } catch {
+    return true;
+  }
+  return LOW_QUALITY_TITLE.test(hit.title);
+}
+
 export function isSameSource(left: string, right: string): boolean {
   try {
     const a = new URL(left);

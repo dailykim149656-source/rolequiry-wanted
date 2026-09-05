@@ -20,12 +20,14 @@ export function DecisionPanel({
   onInvestigate,
   onShare,
   onFeedback,
+  onDeepDive,
 }: {
   readonly snapshot: CaseSnapshot;
   readonly className?: string;
   readonly onInvestigate?: () => void;
   readonly onShare?: () => void;
   readonly onFeedback?: () => void;
+  readonly onDeepDive?: () => void;
 }) {
   const selected = snapshot.derived.claims.find(
     (claim) => claim.id === snapshot.activeProbeId,
@@ -88,6 +90,15 @@ export function DecisionPanel({
           type="button"
         >
           {copy.leaveFeedback}
+        </button>
+      ) : null}
+      {onDeepDive ? (
+        <button
+          className="mt-2 h-10 w-full rounded-full border border-[#e1e2e4] bg-white text-sm font-bold"
+          onClick={onDeepDive}
+          type="button"
+        >
+          {copy.deepDive}
         </button>
       ) : null}
       {question ? (

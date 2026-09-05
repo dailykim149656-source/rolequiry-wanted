@@ -102,6 +102,9 @@ const COPY = {
     feedbackPrompt: "지원할지 판단하는 데 도움이 됐나요? 한 줄만 적어 주세요.",
     feedbackThanks: "피드백을 기록했습니다.",
     feedbackFailed: "피드백을 저장하지 못했습니다.",
+    deepDive: "ChatGPT로 더 깊게 보기",
+    deepDiveCopied: "ChatGPT에 붙여넣을 안내를 복사했습니다.",
+    deepDiveFailed: "안내를 복사하지 못했습니다.",
   },
   en: {
     analyze: "Analyze posting",
@@ -187,6 +190,9 @@ const COPY = {
     feedbackPrompt: "Did this help you decide whether to apply? One sentence is enough.",
     feedbackThanks: "Feedback saved.",
     feedbackFailed: "Could not save feedback.",
+    deepDive: "Go deeper in ChatGPT",
+    deepDiveCopied: "Copied a ChatGPT prompt for this case.",
+    deepDiveFailed: "Could not copy the ChatGPT prompt.",
   },
 } as const;
 

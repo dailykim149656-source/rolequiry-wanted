@@ -1,6 +1,9 @@
 import { verifyEvidence } from "@/lib/ai/verify-evidence";
 import { clusterEvidence, scoreEvidenceRelevance } from "@/lib/domain/evidence-relevance";
+import { chatJson } from "@/lib/ai/client";
+import { hostedAiConfig } from "@/lib/ai/env";
 import {
+  isLowQualityHit,
   isSameSource,
   publicSearchQuery,
   searchPublicWeb,
@@ -75,7 +78,11 @@ async function candidatesFromHits(
   hits: readonly WebSearchHit[],
 ): Promise<ResearchCandidate[]> {
   const posting = input.jobPostingUrl;
-  const unique = hits.filter((hit) => !posting || !isSameSource(hit.url, posting));
+  const unique = hits.filter((hit) => {
+    if (isLowQualityHit(hit)) return false;
+    if (posting && isSameSource(hit.url, posting)) return false;
+    return true;
+  });
   const researched = await Promise.all(
     unique.slice(0, 4).map(async (hit, index) => {
       const text = (await fetchSourceText(hit.url)) || hit.title;
@@ -104,24 +111,72 @@ async function candidatesFromHits(
   return clusterEvidence(researched) as ResearchCandidate[];
 }
 
-export async function researchClaim(
+export type ResearchQueries = {
+  readonly support: string;
+  readonly counter: string;
+};
+
+export function researchQueriesFromModel(
   input: ResearchClaimInput,
-): Promise<ResearchClaimResult> {
-  const supportHits = await searchPublicWeb(
-    publicSearchQuery({
+  proposed?: { readonly supportQuery?: string; readonly counterQuery?: string },
+): ResearchQueries {
+  const fallback = {
+    support: publicSearchQuery({
       company: input.company,
       role: input.role,
       unresolvedVariable: input.unresolvedVariable,
     }),
-  );
-  const counterHits = await searchPublicWeb(
-    publicSearchQuery({
+    counter: publicSearchQuery({
       company: input.company,
       role: input.role,
       unresolvedVariable: input.unresolvedVariable,
       counter: true,
     }),
-  );
+  };
+  const support = proposed?.supportQuery?.trim();
+  const counter = proposed?.counterQuery?.trim();
+  return {
+    support: support || fallback.support,
+    counter: counter || fallback.counter,
+  };
+}
+
+export function chatgptDeepDivePrompt(caseUrl: string, nextQuestion?: string): string {
+  const question = nextQuestion?.trim();
+  const lines = [
+    'Open this Rolequiry case and keep working in the same page: ' + caseUrl,
+    'Use the page tools. Do not scrape the DOM.',
+    'Call select_decision_changer, then search the public web only for that active item.',
+    'Look for supporting evidence and counterevidence. Record only http(s) sources with record_research_evidence.',
+    'If a source does not settle the claim, say so. Do not invent a fit score.',
+  ];
+  if (question) lines.push('Start from this question: ' + question);
+  return lines.join(' ');
+}
+
+async function hostedResearchQueries(input: ResearchClaimInput): Promise<ResearchQueries> {
+  const config = hostedAiConfig();
+  if (!config.enabled) return researchQueriesFromModel(input);
+  const proposed = await chatJson<{ supportQuery?: string; counterQuery?: string }>({
+    model: config.researchModel,
+    system:
+      'Return JSON {supportQuery, counterQuery} for one unresolved job-fit question. Queries must be short web searches, not answers. Include a counterevidence query.',
+    user: JSON.stringify({
+      company: input.company,
+      role: input.role,
+      employerStatement: input.employerStatement,
+      unresolvedVariable: input.unresolvedVariable,
+    }),
+  });
+  return researchQueriesFromModel(input, proposed ?? undefined);
+}
+
+export async function researchClaim(
+  input: ResearchClaimInput,
+): Promise<ResearchClaimResult> {
+  const queries = await hostedResearchQueries(input);
+  const supportHits = await searchPublicWeb(queries.support);
+  const counterHits = await searchPublicWeb(queries.counter);
   const merged = [...supportHits, ...counterHits].filter(
     (hit, index, all) => all.findIndex((item) => item.url === hit.url) === index,
   );
